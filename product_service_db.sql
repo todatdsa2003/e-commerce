@@ -6,8 +6,12 @@ CREATE TABLE categories (
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
     parent_id BIGINT,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+
 );
+
+
 
 -- ============================
 -- 2. TABLE: brands
@@ -15,7 +19,9 @@ CREATE TABLE categories (
 CREATE TABLE brands (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+
 );
 
 -- ============================
@@ -26,8 +32,9 @@ CREATE TABLE product_status (
     code VARCHAR(30) UNIQUE NOT NULL,
     label VARCHAR(100) NOT NULL,
     description TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
-    display_order INT DEFAULT 0
+    display_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Insert default status
@@ -77,6 +84,7 @@ CREATE TABLE product_images (
     image_url VARCHAR(500) NOT NULL,
     is_thumbnail BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT fk_images_product
         FOREIGN KEY (product_id) REFERENCES products(id)
 );
@@ -90,7 +98,9 @@ CREATE TABLE product_attributes (
     attribute_name VARCHAR(100) NOT NULL,
     attribute_value VARCHAR(255) NOT NULL,
     CONSTRAINT fk_attributes_product
-        FOREIGN KEY (product_id) REFERENCES products(id)
+        FOREIGN KEY (product_id) REFERENCES products(id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- ============================
