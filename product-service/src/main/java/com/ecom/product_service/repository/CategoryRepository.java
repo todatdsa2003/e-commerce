@@ -13,17 +13,19 @@ import com.ecom.product_service.model.Category;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    
+
     boolean existsBySlug(String slug);
-    
-    @Query("SELECT c FROM Category c WHERE " +
-           ":search IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))")
+
+    @Query("SELECT c FROM Category c " +
+            "WHERE (:search IS NULL OR :search = '') OR LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Category> findAllWithSearch(@Param("search") String search, Pageable pageable);
-    
+
     List<Category> findByParentId(Long parentId);
-    
+
     boolean existsByParentId(Long parentId);
-    
+
+    boolean existsByName(String name);
+
     @Query("SELECT COUNT(p) > 0 FROM Product p WHERE p.category.id = :categoryId")
     boolean hasProducts(@Param("categoryId") Long categoryId);
 }

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecom.product_service.dto.CategoryRequest;
@@ -19,12 +20,12 @@ import com.ecom.product_service.responses.PageResponse;
 import com.ecom.product_service.service.CategoryService;
 import com.ecom.product_service.util.SlugUtils;
 
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
-
-    public CategoryServiceImpl(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -70,6 +71,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
         // Validate
+        if (categoryRepository.existsByName(request.getName())) {
+            throw new BadRequestException("Tên danh mục đã tồn tại");
+        }
         if (request.getParentId() != null) {
             if (!categoryRepository.existsById(request.getParentId())) {
                 throw new ResourceNotFoundException("Không tìm thấy danh mục cha với ID: " + request.getParentId());
@@ -85,6 +89,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         Category category = new Category();
+
         category.setName(request.getName());
         category.setSlug(slug);
         category.setParentId(request.getParentId());
@@ -110,6 +115,9 @@ public class CategoryServiceImpl implements CategoryService {
 
         // Cap nhat slug khi name thay doi
         if (!category.getName().equals(request.getName())) {
+            if (categoryRepository.existsByName(request.getName())) {
+                throw new BadRequestException("Tên danh mục đã tồn tại");
+            }
             String slug = SlugUtils.toSlug(request.getName());
             if (categoryRepository.existsBySlug(slug) && !category.getSlug().equals(slug)) {
                 slug = slug + "-" + System.currentTimeMillis();
@@ -142,7 +150,6 @@ public class CategoryServiceImpl implements CategoryService {
 
         categoryRepository.delete(category);
     }
-
 
     private CategoryResponse mapToCategoryResponse(Category category) {
         CategoryResponse response = CategoryResponse.builder()
