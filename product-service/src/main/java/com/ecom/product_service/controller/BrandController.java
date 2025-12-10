@@ -14,60 +14,55 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ecom.product_service.dto.CategoryRequest;
-import com.ecom.product_service.responses.CategoryResponse;
+import com.ecom.product_service.dto.BrandRequest;
+import com.ecom.product_service.responses.BrandResponse;
 import com.ecom.product_service.responses.PageResponse;
-import com.ecom.product_service.service.CategoryService;
+import com.ecom.product_service.service.BrandService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/categories")
+@RequestMapping("/api/v1/brands")
 @RequiredArgsConstructor
-public class CategoryController {
+public class BrandController {
 
-    private final CategoryService categoryService;
+    private final BrandService brandService;
 
-    //get  all category
     @GetMapping
-    public ResponseEntity<PageResponse<CategoryResponse>> getAllCategories(
+    public ResponseEntity<PageResponse<BrandResponse>> getAllBrands(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search) {
 
-        PageResponse<CategoryResponse> response = categoryService.getAllCategories(page, size, search);
+        PageResponse<BrandResponse> response = brandService.getAllBrands(page, size, search);
         return ResponseEntity.ok(response);
     }
 
-    //get by id
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id) {
-        CategoryResponse response = categoryService.getCategoryById(id);
+    public ResponseEntity<BrandResponse> getBrandById(@PathVariable Long id) {
+        BrandResponse response = brandService.getBrandById(id);
         return ResponseEntity.ok(response);
     }
 
-    // create 
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
-        CategoryResponse response = categoryService.createCategory(request);
+    public ResponseEntity<BrandResponse> createBrand(@Valid @RequestBody BrandRequest request) {
+        BrandResponse response = brandService.createBrand(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // update
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryResponse> updateCategory(
+    public ResponseEntity<BrandResponse> updateBrand(
             @PathVariable Long id,
-            @Valid @RequestBody CategoryRequest request) {
+            @Valid @RequestBody BrandRequest request) {
 
-        CategoryResponse response = categoryService.updateCategory(id, request);
+        BrandResponse response = brandService.updateBrand(id, request);
         return ResponseEntity.ok(response);
     }
 
-    // delete
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteCategory(@PathVariable Long id) {
-        categoryService.deleteCategory(id);
-        return ResponseEntity.ok(Map.of("message", "Xóa danh mục thành công"));
+    public ResponseEntity<Map<String, String>> deleteBrand(@PathVariable Long id) {
+        brandService.deleteBrand(id);
+        return ResponseEntity.ok(Map.of("message", "Xóa thương hiệu thành công"));
     }
 }

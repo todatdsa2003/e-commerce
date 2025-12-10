@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ecom.product_service.dto.CategoryRequest;
 import com.ecom.product_service.exception.BadRequestException;
 import com.ecom.product_service.exception.ResourceNotFoundException;
+import com.ecom.product_service.mapper.CategoryMapper;
 import com.ecom.product_service.model.Category;
 import com.ecom.product_service.repository.CategoryRepository;
 import com.ecom.product_service.responses.CategoryResponse;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -34,7 +36,7 @@ public class CategoryServiceImpl implements CategoryService {
         Page<Category> categoryPage = categoryRepository.findAllWithSearch(search, pageable);
 
         List<CategoryResponse> categoryResponses = categoryPage.getContent().stream()
-                .map(this::mapToCategoryResponse)
+                .map(categoryMapper::toCategoryResponse)
                 .collect(Collectors.toList());
 
         return PageResponse.<CategoryResponse>builder()
@@ -53,13 +55,19 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục với ID: " + id));
 
-        CategoryResponse response = mapToCategoryResponse(category);
+        CategoryResponse response = categoryMapper.toCategoryResponse(category);
+
+        // Lay ten danh muc cha
+        if (category.getParentId() != null) {
+            categoryRepository.findById(category.getParentId())
+                    .ifPresent(parent -> response.setParentName(parent.getName()));
+        }
 
         // Lay child category
         List<Category> children = categoryRepository.findByParentId(id);
         if (!children.isEmpty()) {
             List<CategoryResponse> childrenResponses = children.stream()
-                    .map(this::mapToCategoryResponse)
+                    .map(categoryMapper::toCategoryResponse)
                     .collect(Collectors.toList());
             response.setChildren(childrenResponses);
         }
@@ -95,7 +103,15 @@ public class CategoryServiceImpl implements CategoryService {
         category.setParentId(request.getParentId());
 
         Category savedCategory = categoryRepository.save(category);
-        return mapToCategoryResponse(savedCategory);
+        CategoryResponse response = categoryMapper.toCategoryResponse(savedCategory);
+        
+        // Lay ten danh muc cha neu co
+        if (savedCategory.getParentId() != null) {
+            categoryRepository.findById(savedCategory.getParentId())
+                    .ifPresent(parent -> response.setParentName(parent.getName()));
+        }
+        
+        return response;
     }
 
     @Override
@@ -129,7 +145,15 @@ public class CategoryServiceImpl implements CategoryService {
         category.setParentId(request.getParentId());
 
         Category updatedCategory = categoryRepository.save(category);
-        return mapToCategoryResponse(updatedCategory);
+        CategoryResponse response = categoryMapper.toCategoryResponse(updatedCategory);
+        
+        // Lay ten danh muc cha neu co
+        if (updatedCategory.getParentId() != null) {
+            categoryRepository.findById(updatedCategory.getParentId())
+                    .ifPresent(parent -> response.setParentName(parent.getName()));
+        }
+        
+        return response;
     }
 
     @Override
@@ -149,24 +173,5 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         categoryRepository.delete(category);
-    }
-
-    private CategoryResponse mapToCategoryResponse(Category category) {
-        CategoryResponse response = CategoryResponse.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .slug(category.getSlug())
-                .parentId(category.getParentId())
-                .createdAt(category.getCreatedAt())
-                .updatedAt(category.getUpdatedAt())
-                .build();
-
-        // Lay ten danh muc cha
-        if (category.getParentId() != null) {
-            categoryRepository.findById(category.getParentId())
-                    .ifPresent(parent -> response.setParentName(parent.getName()));
-        }
-
-        return response;
     }
 }
