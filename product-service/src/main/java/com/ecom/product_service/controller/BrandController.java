@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.product_service.dto.BrandRequest;
-import com.ecom.product_service.responses.BrandResponse;
-import com.ecom.product_service.responses.PageResponse;
+import com.ecom.product_service.response.BrandResponse;
+import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.service.BrandService;
 
 import jakarta.validation.Valid;

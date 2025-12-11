@@ -16,8 +16,8 @@ import com.ecom.product_service.exception.ResourceNotFoundException;
 import com.ecom.product_service.mapper.BrandMapper;
 import com.ecom.product_service.model.Brand;
 import com.ecom.product_service.repository.BrandRepository;
-import com.ecom.product_service.responses.BrandResponse;
-import com.ecom.product_service.responses.PageResponse;
+import com.ecom.product_service.response.BrandResponse;
+import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.service.BrandService;
 
 import lombok.RequiredArgsConstructor;

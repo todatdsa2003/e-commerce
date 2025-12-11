@@ -16,8 +16,8 @@ import com.ecom.product_service.exception.ResourceNotFoundException;
 import com.ecom.product_service.mapper.CategoryMapper;
 import com.ecom.product_service.model.Category;
 import com.ecom.product_service.repository.CategoryRepository;
-import com.ecom.product_service.responses.CategoryResponse;
-import com.ecom.product_service.responses.PageResponse;
+import com.ecom.product_service.response.CategoryResponse;
+import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.service.CategoryService;
 import com.ecom.product_service.util.SlugUtils;
 

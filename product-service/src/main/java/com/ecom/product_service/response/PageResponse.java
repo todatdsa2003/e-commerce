@@ -1,4 +1,4 @@
-package com.ecom.product_service.responses;
+package com.ecom.product_service.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

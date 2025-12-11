@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ecom.product_service.responses.ProductStatusResponse;
+import com.ecom.product_service.response.ProductStatusResponse;
 import com.ecom.product_service.service.ProductStatusService;
 
 import lombok.RequiredArgsConstructor;
