@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -50,6 +51,27 @@ public class GlobalExceptionHandler {
             errors
         );
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String message = "Vi phạm ràng buộc dữ liệu";
+        
+        String exceptionMessage = ex.getMessage();
+        if (exceptionMessage != null) {
+            if (exceptionMessage.contains("Duplicate entry")) {
+                message = "Dữ liệu đã tồn tại trong hệ thống";
+            } else if (exceptionMessage.contains("foreign key constraint")) {
+                message = "Không thể xóa do dữ liệu đang được sử dụng";
+            }
+        }
+        
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.CONFLICT.value(),
+            message,
+            LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
     
     @ExceptionHandler(Exception.class)
