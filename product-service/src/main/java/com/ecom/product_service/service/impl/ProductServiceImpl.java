@@ -17,14 +17,19 @@ import com.ecom.product_service.mapper.ProductMapper;
 import com.ecom.product_service.model.Brand;
 import com.ecom.product_service.model.Category;
 import com.ecom.product_service.model.Product;
+import com.ecom.product_service.model.ProductPriceHistory;
 import com.ecom.product_service.model.ProductStatus;
 import com.ecom.product_service.repository.BrandRepository;
 import com.ecom.product_service.repository.CategoryRepository;
+import com.ecom.product_service.repository.ProductPriceHistoryRepository;
 import com.ecom.product_service.repository.ProductRepository;
 import com.ecom.product_service.repository.ProductStatusRepository;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
 import com.ecom.product_service.service.ProductService;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import com.ecom.product_service.util.SlugUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -36,6 +41,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductStatusRepository productStatusRepository;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
+    private final ProductPriceHistoryRepository productPriceHistoryRepository;
     private final ProductMapper productMapper;
 
     @Override
@@ -45,12 +51,12 @@ public class ProductServiceImpl implements ProductService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Product> productPage = productRepository.findAllWithFilters(search, statusId, categoryId, brandId, pageable);
 
-        List<ProductResponse> productResponses = productPage.getContent().stream()
+        List<ProductResponse> productresponse = productPage.getContent().stream()
                 .map(productMapper::toProductResponse)
                 .collect(Collectors.toList());
 
         return PageResponse.<ProductResponse>builder()
-                .content(productResponses)
+                .content(productresponse)
                 .pageNumber(productPage.getNumber())
                 .pageSize(productPage.getSize())
                 .totalElements(productPage.getTotalElements())
@@ -117,6 +123,19 @@ public class ProductServiceImpl implements ProductService {
 
         ProductStatus status = productStatusRepository.findById(request.getStatusId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy trạng thái với ID: " + request.getStatusId()));
+
+        // Lưu lịch sử giá nếu giá thay đổi
+        BigDecimal oldPrice = product.getPrice();
+        BigDecimal newPrice = request.getPrice();
+        
+        if (oldPrice != null && newPrice != null && oldPrice.compareTo(newPrice) != 0) {
+            ProductPriceHistory priceHistory = new ProductPriceHistory();
+            priceHistory.setProduct(product);
+            priceHistory.setOldPrice(oldPrice);
+            priceHistory.setNewPrice(newPrice);
+            priceHistory.setChangedAt(LocalDateTime.now());
+            productPriceHistoryRepository.save(priceHistory);
+        }
 
         product.setName(request.getName());
         product.setSlug(SlugUtils.toSlug(request.getName()));

@@ -35,12 +35,12 @@ public class CategoryServiceImpl implements CategoryService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Category> categoryPage = categoryRepository.findAllWithSearch(search, pageable);
 
-        List<CategoryResponse> categoryResponses = categoryPage.getContent().stream()
+        List<CategoryResponse> categoryresponse = categoryPage.getContent().stream()
                 .map(categoryMapper::toCategoryResponse)
                 .collect(Collectors.toList());
 
         return PageResponse.<CategoryResponse>builder()
-                .content(categoryResponses)
+                .content(categoryresponse)
                 .pageNumber(categoryPage.getNumber())
                 .pageSize(categoryPage.getSize())
                 .totalElements(categoryPage.getTotalElements())
@@ -66,10 +66,10 @@ public class CategoryServiceImpl implements CategoryService {
         // Lay child category
         List<Category> children = categoryRepository.findByParentId(id);
         if (!children.isEmpty()) {
-            List<CategoryResponse> childrenResponses = children.stream()
+            List<CategoryResponse> childrenresponse = children.stream()
                     .map(categoryMapper::toCategoryResponse)
                     .collect(Collectors.toList());
-            response.setChildren(childrenResponses);
+            response.setChildren(childrenresponse);
         }
 
         return response;
