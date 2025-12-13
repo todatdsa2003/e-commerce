@@ -1,6 +1,7 @@
-package com.ecom.product_service.responses;
+package com.ecom.product_service.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,13 +12,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductStatusResponse {
+public class CategoryResponse {
     
     private Long id;
-    private String code;
-    private String label;
-    private String description;
-    private Integer displayOrder;
+    private String name;
+    private String slug;
+    private Long parentId;
+    private String parentName;
+    private List<CategoryResponse> children;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

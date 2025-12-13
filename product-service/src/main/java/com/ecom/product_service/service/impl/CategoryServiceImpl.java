@@ -16,8 +16,8 @@ import com.ecom.product_service.exception.ResourceNotFoundException;
 import com.ecom.product_service.mapper.CategoryMapper;
 import com.ecom.product_service.model.Category;
 import com.ecom.product_service.repository.CategoryRepository;
-import com.ecom.product_service.responses.CategoryResponse;
-import com.ecom.product_service.responses.PageResponse;
+import com.ecom.product_service.response.CategoryResponse;
+import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.service.CategoryService;
 import com.ecom.product_service.util.SlugUtils;
 
@@ -35,12 +35,12 @@ public class CategoryServiceImpl implements CategoryService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Category> categoryPage = categoryRepository.findAllWithSearch(search, pageable);
 
-        List<CategoryResponse> categoryResponses = categoryPage.getContent().stream()
+        List<CategoryResponse> categoryresponse = categoryPage.getContent().stream()
                 .map(categoryMapper::toCategoryResponse)
                 .collect(Collectors.toList());
 
         return PageResponse.<CategoryResponse>builder()
-                .content(categoryResponses)
+                .content(categoryresponse)
                 .pageNumber(categoryPage.getNumber())
                 .pageSize(categoryPage.getSize())
                 .totalElements(categoryPage.getTotalElements())
@@ -66,10 +66,10 @@ public class CategoryServiceImpl implements CategoryService {
         // Lay child category
         List<Category> children = categoryRepository.findByParentId(id);
         if (!children.isEmpty()) {
-            List<CategoryResponse> childrenResponses = children.stream()
+            List<CategoryResponse> childrenresponse = children.stream()
                     .map(categoryMapper::toCategoryResponse)
                     .collect(Collectors.toList());
-            response.setChildren(childrenResponses);
+            response.setChildren(childrenresponse);
         }
 
         return response;

@@ -16,8 +16,8 @@ import com.ecom.product_service.exception.ResourceNotFoundException;
 import com.ecom.product_service.mapper.BrandMapper;
 import com.ecom.product_service.model.Brand;
 import com.ecom.product_service.repository.BrandRepository;
-import com.ecom.product_service.responses.BrandResponse;
-import com.ecom.product_service.responses.PageResponse;
+import com.ecom.product_service.response.BrandResponse;
+import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.service.BrandService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class BrandServiceImpl implements BrandService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Brand> brandPage = brandRepository.findAllWithSearch(search, pageable);
 
-        List<BrandResponse> brandResponses = brandPage.getContent().stream()
+        List<BrandResponse> brandresponse = brandPage.getContent().stream()
                 .map(brand -> {
                     Long productCount = brandRepository.countProductsByBrandId(brand.getId());
                     return brandMapper.toBrandResponse(brand, productCount);
@@ -42,7 +42,7 @@ public class BrandServiceImpl implements BrandService {
                 .collect(Collectors.toList());
 
         return PageResponse.<BrandResponse>builder()
-                .content(brandResponses)
+                .content(brandresponse)
                 .pageNumber(brandPage.getNumber())
                 .pageSize(brandPage.getSize())
                 .totalElements(brandPage.getTotalElements())

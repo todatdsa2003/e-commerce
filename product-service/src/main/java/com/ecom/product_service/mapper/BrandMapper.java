@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.ecom.product_service.model.Brand;
-import com.ecom.product_service.responses.BrandResponse;
+import com.ecom.product_service.response.BrandResponse;
 
 @Mapper(componentModel = "spring")
 public interface BrandMapper {

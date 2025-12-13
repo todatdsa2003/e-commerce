@@ -10,7 +10,7 @@ import com.ecom.product_service.exception.ResourceNotFoundException;
 import com.ecom.product_service.mapper.ProductStatusMapper;
 import com.ecom.product_service.model.ProductStatus;
 import com.ecom.product_service.repository.ProductStatusRepository;
-import com.ecom.product_service.responses.ProductStatusResponse;
+import com.ecom.product_service.response.ProductStatusResponse;
 import com.ecom.product_service.service.ProductStatusService;
 
 import lombok.RequiredArgsConstructor;

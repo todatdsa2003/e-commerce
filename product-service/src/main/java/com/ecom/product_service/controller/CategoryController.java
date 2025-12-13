@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.product_service.dto.CategoryRequest;
-import com.ecom.product_service.responses.CategoryResponse;
-import com.ecom.product_service.responses.PageResponse;
+import com.ecom.product_service.response.CategoryResponse;
+import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.service.CategoryService;
 
 import jakarta.validation.Valid;
