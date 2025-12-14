@@ -2,6 +2,8 @@ package com.ecom.product_service.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +28,10 @@ public class ProductResponse {
     private String categoryName;
     private Long brandId;
     private String brandName;
+    
+    @Builder.Default
+    private List<ProductAttributeResponse> attributes = new ArrayList<>();
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

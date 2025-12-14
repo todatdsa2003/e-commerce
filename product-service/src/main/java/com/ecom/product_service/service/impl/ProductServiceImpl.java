@@ -1,5 +1,7 @@
 package com.ecom.product_service.service.impl;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ecom.product_service.dto.ProductAttributeRequest;
 import com.ecom.product_service.dto.ProductRequest;
 import com.ecom.product_service.exception.BadRequestException;
 import com.ecom.product_service.exception.ResourceNotFoundException;
@@ -17,6 +20,7 @@ import com.ecom.product_service.mapper.ProductMapper;
 import com.ecom.product_service.model.Brand;
 import com.ecom.product_service.model.Category;
 import com.ecom.product_service.model.Product;
+import com.ecom.product_service.model.ProductAttribute;
 import com.ecom.product_service.model.ProductPriceHistory;
 import com.ecom.product_service.model.ProductStatus;
 import com.ecom.product_service.repository.BrandRepository;
@@ -27,9 +31,6 @@ import com.ecom.product_service.repository.ProductStatusRepository;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
 import com.ecom.product_service.service.ProductService;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import com.ecom.product_service.util.SlugUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -106,6 +107,19 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Product savedProduct = productRepository.save(product);
+        
+        // Thêm attributes
+        if (request.getAttributes() != null && !request.getAttributes().isEmpty()) {
+            for (ProductAttributeRequest attrRequest : request.getAttributes()) {
+                ProductAttribute attribute = new ProductAttribute();
+                attribute.setProduct(savedProduct);
+                attribute.setAttributeName(attrRequest.getAttributeName());
+                attribute.setAttributeValue(attrRequest.getAttributeValue());
+                savedProduct.getAttributes().add(attribute);
+            }
+            savedProduct = productRepository.save(savedProduct);
+        }
+        
         return productMapper.toProductResponse(savedProduct);
     }
 
@@ -158,6 +172,21 @@ public class ProductServiceImpl implements ProductService {
             product.setBrand(brand);
         } else {
             product.setBrand(null);
+        }
+
+        // Cập nhật attributes (xóa thuộc tính cũ hoặc thêm mới)
+        if (request.getAttributes() != null) {
+            product.getAttributes().clear();
+            
+            if (!request.getAttributes().isEmpty()) {
+                for (ProductAttributeRequest attrRequest : request.getAttributes()) {
+                    ProductAttribute attribute = new ProductAttribute();
+                    attribute.setProduct(product);
+                    attribute.setAttributeName(attrRequest.getAttributeName());
+                    attribute.setAttributeValue(attrRequest.getAttributeValue());
+                    product.getAttributes().add(attribute);
+                }
+            }
         }
 
         Product updatedProduct = productRepository.save(product);
