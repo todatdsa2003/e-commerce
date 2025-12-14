@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductAttributeRequest {
     
-    private Long id; // Optional: nếu có ID thì update, không có thì tạo mới
+    private Long id; 
     
     @NotBlank(message = "Tên thuộc tính không được để trống")
     private String attributeName;
