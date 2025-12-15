@@ -18,4 +18,5 @@ public class BrandResponse {
     private Long productCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Boolean isDeleted;
 }

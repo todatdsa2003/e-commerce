@@ -229,8 +229,8 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + id));
-
-        productRepository.delete(product);
+        product.setIsDeleted(true);
+        productRepository.save(product);
     }
 
     // Validate neu cung 1 request co thuoc tinh bi trung lap

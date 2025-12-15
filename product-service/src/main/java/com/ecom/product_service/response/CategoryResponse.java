@@ -22,4 +22,6 @@ public class CategoryResponse {
     private List<CategoryResponse> children;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Boolean isDeleted;
+
 }

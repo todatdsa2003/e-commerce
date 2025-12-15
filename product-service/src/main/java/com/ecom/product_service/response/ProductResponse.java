@@ -28,6 +28,7 @@ public class ProductResponse {
     private String categoryName;
     private Long brandId;
     private String brandName;
+    private Boolean isDeleted;
     
     @Builder.Default
     private List<ProductAttributeResponse> attributes = new ArrayList<>();

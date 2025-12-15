@@ -12,6 +12,7 @@ import com.ecom.product_service.model.ProductPriceHistory;
 @Repository
 public interface ProductPriceHistoryRepository extends JpaRepository<ProductPriceHistory, Long> {
 
+
     @Query("SELECT pph FROM ProductPriceHistory pph " +
             "LEFT JOIN FETCH pph.product p " +
             "WHERE p.id = :productId")
