@@ -61,7 +61,8 @@ public class GlobalExceptionHandler {
                     message = "Không thể xóa thương hiệu vì còn sản phẩm đang sử dụng";
                 } else if (exceptionMessage.contains("fk_products_category")) {
                     message = "Không thể xóa danh mục vì còn sản phẩm đang sử dụng";
-                } else {
+                } 
+                else {
                     message = "Không thể xóa do dữ liệu đang được sử dụng";
                 }
             }
@@ -70,6 +71,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 message,
+
                 LocalDateTime.now());
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
