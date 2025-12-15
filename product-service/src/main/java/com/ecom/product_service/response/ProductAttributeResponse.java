@@ -1,7 +1,5 @@
 package com.ecom.product_service.response;
 
-import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,12 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BrandResponse {
+public class ProductAttributeResponse {
     
     private Long id;
-    private String name;
-    private Long productCount;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Boolean isDeleted;
+    private String attributeName;
+    private String attributeValue;
 }

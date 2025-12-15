@@ -18,4 +18,8 @@ public class Brand extends BaseEntity {
     
     @Column(nullable = false)
     private String name;
+
+    
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 }

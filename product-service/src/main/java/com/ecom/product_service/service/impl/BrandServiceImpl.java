@@ -99,10 +99,7 @@ public class BrandServiceImpl implements BrandService {
         Brand brand = brandRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thương hiệu với ID: " + id));
 
-        if (brandRepository.hasProducts(id)) {
-            throw new BadRequestException("Không thể xóa thương hiệu vì còn sản phẩm đang sử dụng");
-        }
-
-        brandRepository.delete(brand);
+        brand.setIsDeleted(true);
+        brandRepository.save(brand);
     }
 }

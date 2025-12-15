@@ -1,7 +1,10 @@
 package com.ecom.product_service.dto;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -35,4 +38,7 @@ public class ProductRequest {
     private Long categoryId;
     
     private Long brandId;
+    
+    @Valid
+    private List<ProductAttributeRequest> attributes = new ArrayList<>();
 }

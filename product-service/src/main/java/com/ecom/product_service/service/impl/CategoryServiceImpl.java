@@ -162,16 +162,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục với ID: " + id));
 
-        // Kiem tra co danh muc con khong
-        if (categoryRepository.existsByParentId(id)) {
-            throw new BadRequestException("Không thể xóa danh mục vì còn danh mục con");
-        }
-
-        // Kiem tra co san pham dang su dung khong
-        if (categoryRepository.hasProducts(id)) {
-            throw new BadRequestException("Không thể xóa danh mục vì còn sản phẩm đang sử dụng");
-        }
-
-        categoryRepository.delete(category);
+        category.setIsDeleted(true);
+        categoryRepository.save(category);
     }
 }

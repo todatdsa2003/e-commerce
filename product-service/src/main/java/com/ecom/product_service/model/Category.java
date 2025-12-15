@@ -24,4 +24,8 @@ public class Category extends BaseEntity {
 
     @Column(name = "parent_id")
     private Long parentId;
+
+    
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 }

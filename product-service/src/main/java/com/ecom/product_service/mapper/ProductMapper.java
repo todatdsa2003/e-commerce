@@ -4,6 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.ecom.product_service.model.Product;
+import com.ecom.product_service.model.ProductAttribute;
+import com.ecom.product_service.response.ProductAttributeResponse;
 import com.ecom.product_service.response.ProductResponse;
 
 @Mapper(componentModel = "spring")
@@ -16,4 +18,6 @@ public interface ProductMapper {
     @Mapping(source = "brand.id", target = "brandId")
     @Mapping(source = "brand.name", target = "brandName")
     ProductResponse toProductResponse(Product product);
+    
+    ProductAttributeResponse toProductAttributeResponse(ProductAttribute attribute);
 }
