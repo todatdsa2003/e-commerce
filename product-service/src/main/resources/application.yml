@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/product_service_db?currentSchema=public
     username: postgres
-    password: 
+    password: datdev
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -24,7 +24,16 @@ spring:
     validate-on-migrate: true
     out-of-order: false
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   logging:
     level:
       org.hibernate.SQL: DEBUG
       org.hibernate.orm.jdbc.bind: TRACE
+
+file:
+  upload-dir: uploads/products
