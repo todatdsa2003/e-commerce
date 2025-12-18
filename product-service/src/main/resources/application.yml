@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/product_service_db?currentSchema=public
     username: postgres
-    password: datdev
+    password: 
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -37,3 +37,10 @@ spring:
 
 file:
   upload-dir: uploads/products
+
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:}
+    url: https://generativelanguage.googleapis.com/v1beta/models
+  model: gemini-2.5-flash 
