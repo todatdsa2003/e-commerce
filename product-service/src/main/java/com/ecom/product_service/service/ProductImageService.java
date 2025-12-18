@@ -10,5 +10,7 @@ public interface ProductImageService {
     
     ProductImageResponse addImage(Long productId, MultipartFile file, Boolean isThumbnail);
     
+    List<ProductImageResponse> addMultipleImages(Long productId, List<MultipartFile> files);
+    
     List<ProductImageResponse> getImagesByProductId(Long productId);
 }

@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -46,13 +47,12 @@ public class ProductImageServiceImpl implements ProductImageService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
 
-        // Check số lượng ảnh
         Long currentImageCount = productImageRepository.countByProductId(productId);
         if (currentImageCount >= MAX_IMAGES_PER_PRODUCT) {
             throw new BadRequestException("Sản phẩm chỉ được phép có tối đa " + MAX_IMAGES_PER_PRODUCT + " ảnh");
         }
 
-        // Check số lượng ảnh đại diện
+     
         if (isThumbnail != null && isThumbnail) {
             Long currentThumbnailCount = productImageRepository.countThumbnailByProductId(productId);
             if (currentThumbnailCount >= MAX_THUMBNAILS_PER_PRODUCT) {
@@ -83,6 +83,60 @@ public class ProductImageServiceImpl implements ProductImageService {
         ProductImage savedImage = productImageRepository.save(productImage);
         
         return productImageMapper.toProductImageResponse(savedImage);
+    }
+
+    @Override
+    @Transactional
+    public List<ProductImageResponse> addMultipleImages(Long productId, List<MultipartFile> files) {
+       
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
+
+        
+        if (files == null || files.isEmpty()) {
+            throw new BadRequestException("Danh sách file không được để trống");
+        }
+
+        Long currentImageCount = productImageRepository.countByProductId(productId);
+        Long totalImagesAfterUpload = currentImageCount + files.size();
+        
+        if (totalImagesAfterUpload > MAX_IMAGES_PER_PRODUCT) {
+            throw new BadRequestException("Sản phẩm chỉ được phép có tối đa " + MAX_IMAGES_PER_PRODUCT + " ảnh. " +
+                    "Hiện tại có " + currentImageCount + " ảnh, không thể thêm " + files.size() + " ảnh nữa");
+        }
+
+        for (int i = 0; i < files.size(); i++) {
+            MultipartFile file = files.get(i);
+            
+            if (file.isEmpty()) {
+                throw new BadRequestException("File thứ " + (i + 1) + " không được để trống");
+            }
+
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new BadRequestException("File thứ " + (i + 1) + " phải là ảnh (jpg, png, gif, ...)");
+            }
+            long maxSize = 15 * 1024 * 1024;
+            if (file.getSize() > maxSize) {
+                throw new BadRequestException("File thứ " + (i + 1) + " có kích thước vượt quá 15MB");
+            }
+        }
+
+        List<ProductImageResponse> responses = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String imageUrl = saveFile(file);
+            
+            ProductImage productImage = new ProductImage();
+            productImage.setProduct(product);
+            productImage.setImageUrl(imageUrl);
+            productImage.setIsThumbnail(false);
+
+            ProductImage savedImage = productImageRepository.save(productImage);
+            ProductImageResponse response = productImageMapper.toProductImageResponse(savedImage);
+            responses.add(response);
+        }
+
+        return responses;
     }
 
     @Override

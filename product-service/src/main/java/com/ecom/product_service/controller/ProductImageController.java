@@ -39,4 +39,13 @@ public class ProductImageController {
         ProductImageResponse response = productImageService.addImage(productId, file, isThumbnail);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PostMapping("/multiple")
+    public ResponseEntity<List<ProductImageResponse>> addMultipleImages(
+            @PathVariable Long productId,
+            @RequestParam("files") List<MultipartFile> files) {
+        
+        List<ProductImageResponse> responses = productImageService.addMultipleImages(productId, files);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responses);
+    }
 }
