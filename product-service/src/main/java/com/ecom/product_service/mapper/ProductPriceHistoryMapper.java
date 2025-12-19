@@ -1,5 +1,7 @@
 package com.ecom.product_service.mapper;
 
+import java.math.BigDecimal;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -14,10 +16,10 @@ public interface ProductPriceHistoryMapper {
     @Mapping(target = "priceChange", expression = "java(calculatePriceChange(priceHistory))")
     ProductPriceHistoryResponse toProductPriceHistoryResponse(ProductPriceHistory priceHistory);
     
-    default java.math.BigDecimal calculatePriceChange(ProductPriceHistory priceHistory) {
+    default BigDecimal calculatePriceChange(ProductPriceHistory priceHistory) {
         if (priceHistory.getNewPrice() != null && priceHistory.getOldPrice() != null) {
             return priceHistory.getNewPrice().subtract(priceHistory.getOldPrice());
         }
-        return java.math.BigDecimal.ZERO;
+        return BigDecimal.ZERO;
     }
 }
