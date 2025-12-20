@@ -14,6 +14,4 @@ public class CategoryRequest {
     private String name;
     
     private Long parentId;
-
-    private Boolean isDeleted;
 }

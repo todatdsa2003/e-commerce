@@ -79,9 +79,6 @@ public class CategoryServiceImpl implements CategoryService {
         validateParentCategory(id, request.getParentId());
         updateCategoryNameAndSlug(category, request.getName());
         
-        if(!category.getIsDeleted() || request.getIsDeleted() == null || !request.getIsDeleted()) {
-            category.setIsDeleted(false);
-        }
         category.setParentId(request.getParentId());
         Category updatedCategory = categoryRepository.save(category);
         

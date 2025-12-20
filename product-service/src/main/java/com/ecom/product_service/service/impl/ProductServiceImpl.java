@@ -33,6 +33,7 @@ import com.ecom.product_service.repository.ProductRepository;
 import com.ecom.product_service.repository.ProductStatusRepository;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
+import com.ecom.product_service.service.MessageService;
 import com.ecom.product_service.service.ProductService;
 import com.ecom.product_service.util.SlugUtils;
 
@@ -48,6 +49,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductPriceHistoryRepository productPriceHistoryRepository;
     private final ProductAttributeRepository productAttributeRepository;
     private final ProductMapper productMapper;
+    private final MessageService messageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -76,7 +78,9 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findByIdWithDetails(id);
         if (product == null) {
-            throw new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + id);
+            throw new ResourceNotFoundException(
+                messageService.getMessage("error.product.not-found", new Object[]{id})
+            );
         }
         return productMapper.toProductResponse(product);
     }
@@ -85,12 +89,15 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
         if (productRepository.existsByName(request.getName())) {
-            throw new BadRequestException("Tên sản phẩm đã tồn tại");
+            throw new BadRequestException(
+                messageService.getMessage("error.product.name.exists")
+            );
         }
 
         ProductStatus status = productStatusRepository.findById(request.getStatusId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy trạng thái với ID: " + request.getStatusId()));
+                    messageService.getMessage("error.product-status.not-found", new Object[]{request.getStatusId()})
+                ));
 
         Product product = new Product();
         product.setName(request.getName());
@@ -103,14 +110,16 @@ public class ProductServiceImpl implements ProductService {
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Không tìm thấy danh mục với ID: " + request.getCategoryId()));
+                        messageService.getMessage("error.category.not-found", new Object[]{request.getCategoryId()})
+                    ));
             product.setCategory(category);
         }
 
         if (request.getBrandId() != null) {
             Brand brand = brandRepository.findById(request.getBrandId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Không tìm thấy thương hiệu với ID: " + request.getBrandId()));
+                        messageService.getMessage("error.brand.not-found", new Object[]{request.getBrandId()})
+                    ));
             product.setBrand(brand);
         }
 
@@ -139,16 +148,21 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product product = productRepository.findByIdWithDetails(id);
         if (product == null) {
-            throw new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + id);
+            throw new ResourceNotFoundException(
+                messageService.getMessage("error.product.not-found", new Object[]{id})
+            );
         }
 
         if (!product.getName().equals(request.getName()) && productRepository.existsByName(request.getName())) {
-            throw new BadRequestException("Tên sản phẩm đã tồn tại");
+            throw new BadRequestException(
+                messageService.getMessage("error.product.name.exists")
+            );
         }
 
         ProductStatus status = productStatusRepository.findById(request.getStatusId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy trạng thái với ID: " + request.getStatusId()));
+                    messageService.getMessage("error.product-status.not-found", new Object[]{request.getStatusId()})
+                ));
 
         // Lưu lịch sử giá nếu giá thay đổi
         BigDecimal oldPrice = product.getPrice();
@@ -173,7 +187,8 @@ public class ProductServiceImpl implements ProductService {
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Không tìm thấy danh mục với ID: " + request.getCategoryId()));
+                        messageService.getMessage("error.category.not-found", new Object[]{request.getCategoryId()})
+                    ));
             product.setCategory(category);
         } else {
             product.setCategory(null);
@@ -182,7 +197,8 @@ public class ProductServiceImpl implements ProductService {
         if (request.getBrandId() != null) {
             Brand brand = brandRepository.findById(request.getBrandId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Không tìm thấy thương hiệu với ID: " + request.getBrandId()));
+                        messageService.getMessage("error.brand.not-found", new Object[]{request.getBrandId()})
+                    ));
             product.setBrand(brand);
         } else {
             product.setBrand(null);
@@ -205,7 +221,8 @@ public class ProductServiceImpl implements ProductService {
                             .filter(attr -> attr.getId().equals(attrRequest.getId()))
                             .findFirst()
                             .orElseThrow(() -> new ResourceNotFoundException(
-                                    "Không tìm thấy thuộc tính với ID: " + attrRequest.getId()));
+                                messageService.getMessage("error.product.attribute.not-found", new Object[]{attrRequest.getId()})
+                            ));
 
                     existingAttr.setAttributeName(attrRequest.getAttributeName());
                     existingAttr.setAttributeValue(attrRequest.getAttributeValue());
@@ -228,9 +245,22 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    messageService.getMessage("error.product.not-found", new Object[]{id})
+                ));
+        
+        validateProductNotAlreadyDeleted(product);
+        
         product.setIsDeleted(true);
         productRepository.save(product);
+    }
+    
+    private void validateProductNotAlreadyDeleted(Product product) {
+        if (Boolean.TRUE.equals(product.getIsDeleted())) {
+            throw new BadRequestException(
+                messageService.getMessage("error.product.already-deleted")
+            );
+        }
     }
 
     // Validate neu cung 1 request co thuoc tinh bi trung lap
@@ -245,7 +275,9 @@ public class ProductServiceImpl implements ProductService {
             String key = attr.getAttributeName() + "=" + attr.getAttributeValue();
 
             if (seen.contains(key)) {
-                throw new BadRequestException("Thuộc tính bị trùng lặp: " + key);
+                throw new BadRequestException(
+                    messageService.getMessage("error.product.attribute.duplicate", new Object[]{key})
+                );
             }
 
             seen.add(key);
@@ -271,10 +303,10 @@ public class ProductServiceImpl implements ProductService {
                 boolean isSameValue = existingAttr.getAttributeValue().equals(newAttr.getAttributeValue());
 
                 if (isSameName && isSameValue) {
-                    String errorMsg = String.format("Thuộc tính đã tồn tại: %s = %s",
-                            newAttr.getAttributeName(),
-                            newAttr.getAttributeValue());
-                    throw new BadRequestException(errorMsg);
+                    String attributeKey = newAttr.getAttributeName() + " = " + newAttr.getAttributeValue();
+                    throw new BadRequestException(
+                        messageService.getMessage("error.product.attribute.exists", new Object[]{attributeKey})
+                    );
                 }
             }
         }

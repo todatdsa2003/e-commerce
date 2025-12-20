@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ecom.product_service.dto.ProductRequest;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
+import com.ecom.product_service.service.MessageService;
 import com.ecom.product_service.service.ProductService;
 
 import jakarta.validation.Valid;
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 
     private final ProductService productService;
+    private final MessageService messageService;
 
     @GetMapping
     public ResponseEntity<PageResponse<ProductResponse>> getAllProducts(
@@ -66,6 +68,7 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
-        return ResponseEntity.ok(Map.of("message", "Xóa sản phẩm thành công"));
+        String message = messageService.getMessage("success.product.deleted");
+        return ResponseEntity.ok(Map.of("message", message));
     }
 }
