@@ -82,6 +82,10 @@ public class BrandServiceImpl implements BrandService {
     @Transactional
     public void deleteBrand(Long id) {
         Brand brand = findBrandByIdOrThrow(id);
+        
+        validateBrandNotAlreadyDeleted(brand);
+        validateBrandNotInUse(id);
+        
         brand.setIsDeleted(true);
         brandRepository.save(brand);
     }
@@ -91,6 +95,23 @@ public class BrandServiceImpl implements BrandService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                     messageService.getMessage("error.brand.not-found", new Object[]{id})
                 ));
+    }
+
+    private void validateBrandNotAlreadyDeleted(Brand brand) {
+        if (Boolean.TRUE.equals(brand.getIsDeleted())) {
+            throw new BadRequestException(
+                messageService.getMessage("error.brand.already-deleted")
+            );
+        }
+    }
+
+    private void validateBrandNotInUse(Long brandId) {
+        Long productCount = brandRepository.countProductsByBrandId(brandId);
+        if (productCount > 0) {
+            throw new BadRequestException(
+                messageService.getMessage("error.brand.has-products", new Object[]{productCount})
+            );
+        }
     }
 
     private void validateBrandNameUnique(String name) {
