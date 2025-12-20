@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CategoryRequest {
     
-    @NotBlank(message = "Tên danh mục không được để trống")
+    @NotBlank(message = "{validation.category.name.required}")
     private String name;
     
     private Long parentId;
