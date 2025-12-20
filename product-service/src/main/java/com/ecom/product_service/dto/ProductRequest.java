@@ -19,24 +19,24 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductRequest {
 
-    @NotBlank(message = "Tên sản phẩm không được để trống")
+    @NotBlank(message = "{validation.name.required}")
     private String name;
 
     private String description;
 
-    @NotNull(message = "Giá sản phẩm không được để trống")
-    @Positive(message = "Giá sản phẩm phải lớn hơn 0")
-    @Digits(integer = 10, fraction = 2, message = "Giá sản phẩm không được lớn quá 1 tỷ và có tối đa 2 chữ số thập phân")
+    @NotNull(message = "{validation.price.required}")
+    @Positive(message = "{validation.price.positive}")
+    @Digits(integer = 10, fraction = 2, message = "{validation.price.digits}")
     private BigDecimal price;
 
-    @NotNull(message = "Số lượng tồn kho không được để trống")
-    @Min(value = 0, message = "Số lượng tồn kho phải lớn hơn hoặc bằng 0")
+    @NotNull(message = "{validation.availability.required}")
+    @Min(value = 0, message = "{validation.availability.min}")
     private Integer availability;
 
-    @NotNull(message = "Trạng thái sản phẩm không được để trống")
+    @NotNull(message = "{validation.status.required}")
     private Long statusId;
 
-    @NotNull(message = "Danh mục sản phẩm không được để trống")
+    @NotNull(message = "{validation.category.required}")
     private Long categoryId;
 
     private Long brandId;
