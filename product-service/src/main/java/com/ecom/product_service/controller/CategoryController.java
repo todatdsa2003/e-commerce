@@ -18,6 +18,7 @@ import com.ecom.product_service.dto.CategoryRequest;
 import com.ecom.product_service.response.CategoryResponse;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.service.CategoryService;
+import com.ecom.product_service.service.MessageService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,8 @@ import lombok.RequiredArgsConstructor;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final MessageService messageService;
 
-    //get  all category
     @GetMapping
     public ResponseEntity<PageResponse<CategoryResponse>> getAllCategories(
             @RequestParam(defaultValue = "0") int page,
@@ -40,21 +41,18 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
-    //get by id
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id) {
         CategoryResponse response = categoryService.getCategoryById(id);
         return ResponseEntity.ok(response);
     }
 
-    // create 
     @PostMapping
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
         CategoryResponse response = categoryService.createCategory(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // update
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> updateCategory(
             @PathVariable Long id,
@@ -64,10 +62,10 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
-    // delete
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
-        return ResponseEntity.ok(Map.of("message", "Xóa danh mục thành công"));
+        String message = messageService.getMessage("success.category.deleted");
+        return ResponseEntity.ok(Map.of("message", message));
     }
 }

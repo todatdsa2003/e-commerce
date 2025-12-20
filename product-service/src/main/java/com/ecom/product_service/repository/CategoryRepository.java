@@ -27,6 +27,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query("SELECT COUNT(c) > 0 FROM Category c WHERE LOWER(c.name) = LOWER(:name)")
     boolean existsByName(@Param("name") String name);
 
-    @Query("SELECT COUNT(p) > 0 FROM Product p WHERE p.category.id = :categoryId")
-    boolean hasProducts(@Param("categoryId") Long categoryId);
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId AND p.isDeleted = false")
+    Long countProductsByCategoryId(@Param("categoryId") Long categoryId);
+
+    @Query("SELECT c FROM Category c WHERE c.parentId = :parentId AND c.isDeleted = false")
+    List<Category> findActiveChildrenByParentId(@Param("parentId") Long parentId);
 }
