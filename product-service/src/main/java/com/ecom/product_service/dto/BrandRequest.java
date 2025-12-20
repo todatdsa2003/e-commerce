@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BrandRequest {
     
-    @NotBlank(message = "Tên thương hiệu không được để trống")
+    @NotBlank(message = "{validation.brand.name.required}")
     private String name;
 }

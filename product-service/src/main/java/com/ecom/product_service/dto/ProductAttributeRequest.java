@@ -12,9 +12,9 @@ public class ProductAttributeRequest {
     
     private Long id; 
     
-    @NotBlank(message = "Tên thuộc tính không được để trống")
+    @NotBlank(message = "{validation.attribute.name.required}")
     private String attributeName;
     
-    @NotBlank(message = "Giá trị thuộc tính không được để trống")
+    @NotBlank(message = "{validation.attribute.value.required}")
     private String attributeValue;
 }

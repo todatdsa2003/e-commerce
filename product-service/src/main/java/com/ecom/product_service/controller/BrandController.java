@@ -18,6 +18,7 @@ import com.ecom.product_service.dto.BrandRequest;
 import com.ecom.product_service.response.BrandResponse;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.service.BrandService;
+import com.ecom.product_service.service.MessageService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class BrandController {
 
     private final BrandService brandService;
+    private final MessageService messageService;
 
     @GetMapping
     public ResponseEntity<PageResponse<BrandResponse>> getAllBrands(
@@ -63,6 +65,7 @@ public class BrandController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);
-        return ResponseEntity.ok(Map.of("message", "Xóa thương hiệu thành công"));
+        String message = messageService.getMessage("success.brand.deleted");
+        return ResponseEntity.ok(Map.of("message", message));
     }
 }

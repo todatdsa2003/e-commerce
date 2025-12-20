@@ -12,8 +12,17 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.ecom.product_service.response.ErrorResponse;
+import com.ecom.product_service.service.MessageService;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final MessageService messageService;
+
+    public GlobalExceptionHandler(MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
@@ -44,7 +53,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
-                "Lỗi xác thực",
+                messageService.getMessage("error.validation"),
                 LocalDateTime.now(),
                 errors);
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
@@ -52,18 +61,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        String message = "Vi phạm ràng buộc dữ liệu";
+        String message = messageService.getMessage("error.constraint");
 
         String exceptionMessage = ex.getMessage();
         if (exceptionMessage != null) {
             if (exceptionMessage.contains("foreign key constraint") || exceptionMessage.contains("fk_")) {
                 if (exceptionMessage.contains("fk_products_brand")) {
-                    message = "Không thể xóa thương hiệu vì còn sản phẩm đang sử dụng";
+                    message = messageService.getMessage("error.brand.in-use");
                 } else if (exceptionMessage.contains("fk_products_category")) {
-                    message = "Không thể xóa danh mục vì còn sản phẩm đang sử dụng";
+                    message = messageService.getMessage("error.category.in-use");
                 } 
                 else {
-                    message = "Không thể xóa do dữ liệu đang được sử dụng";
+                    message = messageService.getMessage("error.data.in-use");
                 }
             }
         }
@@ -71,7 +80,6 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 message,
-
                 LocalDateTime.now());
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
@@ -80,7 +88,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Đã xảy ra lỗi: " + ex.getMessage(),
+                messageService.getMessage("error.internal", new Object[]{ex.getMessage()}),
                 LocalDateTime.now());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }

@@ -1,4 +1,4 @@
-package com.ecom.product_service.exception;
+package com.ecom.product_service.response;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -19,6 +19,7 @@ public class ErrorResponse {
     private LocalDateTime timestamp;
     private Map<String, String> errors;
     
+
     public ErrorResponse(int status, String message, LocalDateTime timestamp) {
         this.status = status;
         this.message = message;
