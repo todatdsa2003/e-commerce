@@ -1,5 +1,6 @@
 package com.ecom.product_service.config;
 
+import java.time.Duration;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -12,8 +13,8 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
-import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -40,11 +41,14 @@ public class WebConfig implements WebMvcConfigurer {
         return messageSource;
     }
 
-    // Luu ngon ngu vao session - cho phep thay doi dong
+    // Su dung cookie de luu ngon ngu nguoi dung chon
     @Bean
     public LocaleResolver localeResolver() {
-        SessionLocaleResolver resolver = new SessionLocaleResolver();
+        CookieLocaleResolver resolver = new CookieLocaleResolver("LOCALE");
         resolver.setDefaultLocale(Locale.forLanguageTag("vi"));
+        resolver.setCookieMaxAge(Duration.ofDays(30)); // Cookie ton tai 30 ngay
+        resolver.setCookiePath("/");
+        
         return resolver;
     }
 

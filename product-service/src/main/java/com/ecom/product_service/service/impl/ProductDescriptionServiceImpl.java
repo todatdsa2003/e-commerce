@@ -29,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductDescriptionServiceImpl implements ProductDescriptionService {
 
     private static final double AI_TEMPERATURE = 0.7;
-    private static final int MAX_OUTPUT_TOKENS = 500;
-    private static final int ALTERNATIVE_MAX_TOKENS = 200;
+    private static final int MAX_OUTPUT_TOKENS = 1000;
+    private static final int ALTERNATIVE_MAX_TOKENS = 300;
 
     @Value("${gemini.api.key:}")
     private String geminiApiKey;
@@ -78,6 +78,7 @@ public class ProductDescriptionServiceImpl implements ProductDescriptionService 
         String toneGuideline = getToneGuideline(request.getTone());
 
         StringBuilder prompt = new StringBuilder();
+        prompt.append("BẠN LÀ CHUYÊN GIA VIẾT MÔ TẢ SẢN PHẨM. HÃY HOÀN THÀNH ĐẦY ĐỦ MÔ TẢ SAU:\n\n");
         
         prompt.append("Bạn là một copywriter chuyên nghiệp. Nhiệm vụ của bạn là viết mô tả sản phẩm hấp dẫn.\n\n");
         prompt.append("**Thông tin sản phẩm:**\n");
@@ -91,11 +92,13 @@ public class ProductDescriptionServiceImpl implements ProductDescriptionService 
         prompt.append(toneGuideline).append("\n");
         
         prompt.append("\n**Yêu cầu:**\n");
-        prompt.append("1. Độ dài: 100-150 từ\n");
+        prompt.append("1. Độ dài: 100-150 từ (BẮT BUỘC VIẾT ĐỦ)\n");
         prompt.append("2. Ngôn ngữ: Tiếng Việt\n");
         prompt.append("3. Tập trung vào lợi ích cho khách hàng\n");
         prompt.append("4. Sử dụng các từ khóa một cách tự nhiên\n");
         prompt.append("5. Kết thúc bằng call-to-action mạnh mẽ\n");
+        prompt.append("6. QUAN TRỌNG: Phải hoàn thành câu cuối cùng, KHÔNG được cắt đứt giữa chừng\n");
+        prompt.append("\nViết ngay (CHỈ TRẢ VỀ MÔ TẢ, KHÔNG GHI CHÚ THÊM):\n");
         
         return prompt.toString();
     }
@@ -143,10 +146,12 @@ public class ProductDescriptionServiceImpl implements ProductDescriptionService 
             "Viết một mô tả sản phẩm NGẮN GỌN và KHÁC BIỆT hoàn toàn so với mô tả trước.\n\n" +
             "Từ khóa: %s\n\n" +
             "Yêu cầu:\n" +
-            "- Độ dài: Tối đa 50 từ\n" +
+            "- Độ dài: 40-60 từ (VIẾT ĐỦ)\n" +
             "- Tập trung vào 1-2 điểm nổi bật nhất\n" +
             "- Phong cách: Ngắn gọn, súc tích, dễ nhớ\n" +
-            "- Ngôn ngữ: Tiếng Việt",
+            "- Ngôn ngữ: Tiếng Việt\n" +
+            "- QUAN TRỌNG: Hoàn thành câu cuối, không cắt đứt\n\n" +
+            "Viết ngay (CHỈ TRẢ VỀ MÔ TẢ):",
             keywordsText
         );
     }
@@ -173,9 +178,7 @@ public class ProductDescriptionServiceImpl implements ProductDescriptionService 
         }
     }
 
-    /**
-     * Xây dựng request body cho Gemini API
-     */
+
     private Map<String, Object> buildGeminiRequestBody(String prompt, int maxTokens) {
         Map<String, Object> requestBody = new HashMap<>();
         
@@ -197,9 +200,6 @@ public class ProductDescriptionServiceImpl implements ProductDescriptionService 
         return requestBody;
     }
 
-    /**
-     * Parse response từ Gemini API
-     */
     private String parseGeminiResponse(String responseBody) {
         try {
             JsonNode jsonNode = objectMapper.readTree(responseBody);
@@ -217,9 +217,6 @@ public class ProductDescriptionServiceImpl implements ProductDescriptionService 
         }
     }
 
-    /**
-     * Tạo mô tả mẫu khi không có AI
-     */
     private ProductDescriptionResponse generateMockDescription(ProductDescriptionRequest request) {
         String keywordsText = String.join(", ", request.getKeywords());
         String mockDescription = buildMockDescriptionByTone(request.getTone(), keywordsText);
@@ -237,9 +234,6 @@ public class ProductDescriptionServiceImpl implements ProductDescriptionService 
                 .build();
     }
 
-    /**
-     * Tạo mô tả mẫu theo tone
-     */
     private String buildMockDescriptionByTone(ProductDescriptionRequest.DescriptionTone tone, 
                                              String keywordsText) {
         switch (tone) {

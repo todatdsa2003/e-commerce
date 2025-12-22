@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ecom.product_service.dto.ProductRequest;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
+import com.ecom.product_service.response.SuccessResponse;
 import com.ecom.product_service.service.MessageService;
 import com.ecom.product_service.service.ProductService;
 
@@ -51,18 +52,27 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
+    public ResponseEntity<SuccessResponse<ProductResponse>> createProduct(@Valid @RequestBody ProductRequest request) {
         ProductResponse response = productService.createProduct(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        String message = messageService.getMessage("success.product.created");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(SuccessResponse.<ProductResponse>builder()
+                        .message(message)
+                        .data(response)
+                        .build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> updateProduct(
+    public ResponseEntity<SuccessResponse<ProductResponse>> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request) {
 
         ProductResponse response = productService.updateProduct(id, request);
-        return ResponseEntity.ok(response);
+        String message = messageService.getMessage("success.product.updated");
+        return ResponseEntity.ok(SuccessResponse.<ProductResponse>builder()
+                .message(message)
+                .data(response)
+                .build());
     }
 
     @DeleteMapping("/{id}")

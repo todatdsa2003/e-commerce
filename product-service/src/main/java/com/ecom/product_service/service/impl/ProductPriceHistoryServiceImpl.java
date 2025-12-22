@@ -2,8 +2,11 @@ package com.ecom.product_service.service.impl;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,8 +19,8 @@ import com.ecom.product_service.mapper.ProductPriceHistoryMapper;
 import com.ecom.product_service.model.ProductPriceHistory;
 import com.ecom.product_service.repository.ProductPriceHistoryRepository;
 import com.ecom.product_service.repository.ProductRepository;
-import com.ecom.product_service.response.ProductPriceHistoryResponse;
 import com.ecom.product_service.response.PageResponse;
+import com.ecom.product_service.response.ProductPriceHistoryResponse;
 import com.ecom.product_service.service.ProductPriceHistoryService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,13 +31,18 @@ public class ProductPriceHistoryServiceImpl implements ProductPriceHistoryServic
     private final ProductPriceHistoryRepository productPriceHistoryRepository;
     private final ProductRepository productRepository;
     private final ProductPriceHistoryMapper productPriceHistoryMapper;
+    private final MessageSource messageSource;
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<ProductPriceHistoryResponse> getPriceHistoryByProductId(Long productId, int page, int size,
                                                                                  BigDecimal minPrice, BigDecimal maxPrice) {
+        Locale locale = LocaleContextHolder.getLocale();
+        
         if (!productRepository.existsById(productId)) {
-            throw new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + productId);
+            throw new ResourceNotFoundException(
+                messageSource.getMessage("error.product-price-history.product-not-found", 
+                    new Object[]{productId}, locale));
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("changedAt").descending());
