@@ -1,8 +1,11 @@
 package com.ecom.product_service.service.impl;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductStatusServiceImpl implements ProductStatusService {
     private final ProductStatusRepository productStatusRepository;
     private final ProductStatusMapper productStatusMapper;
+    private final MessageSource messageSource;
 
     @Override
     @Transactional(readOnly = true)
@@ -34,8 +38,11 @@ public class ProductStatusServiceImpl implements ProductStatusService {
     @Override
     @Transactional(readOnly = true)
     public ProductStatusResponse getProductStatusById(Long id) {
+        Locale locale = LocaleContextHolder.getLocale();
+        
         ProductStatus status = productStatusRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy trạng thái với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    messageSource.getMessage("error.product-status.not-found", new Object[]{id}, locale)));
 
         return productStatusMapper.toProductStatusResponse(status);
     }

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ecom.product_service.dto.CategoryRequest;
 import com.ecom.product_service.response.CategoryResponse;
 import com.ecom.product_service.response.PageResponse;
+import com.ecom.product_service.response.SuccessResponse;
 import com.ecom.product_service.service.CategoryService;
 import com.ecom.product_service.service.MessageService;
 
@@ -48,18 +49,27 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
+    public ResponseEntity<SuccessResponse<CategoryResponse>> createCategory(@Valid @RequestBody CategoryRequest request) {
         CategoryResponse response = categoryService.createCategory(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        String message = messageService.getMessage("success.category.created");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(SuccessResponse.<CategoryResponse>builder()
+                        .message(message)
+                        .data(response)
+                        .build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryResponse> updateCategory(
+    public ResponseEntity<SuccessResponse<CategoryResponse>> updateCategory(
             @PathVariable Long id,
             @Valid @RequestBody CategoryRequest request) {
 
         CategoryResponse response = categoryService.updateCategory(id, request);
-        return ResponseEntity.ok(response);
+        String message = messageService.getMessage("success.category.updated");
+        return ResponseEntity.ok(SuccessResponse.<CategoryResponse>builder()
+                .message(message)
+                .data(response)
+                .build());
     }
 
     @DeleteMapping("/{id}")

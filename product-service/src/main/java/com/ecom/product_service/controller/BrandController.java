@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ecom.product_service.dto.BrandRequest;
 import com.ecom.product_service.response.BrandResponse;
 import com.ecom.product_service.response.PageResponse;
+import com.ecom.product_service.response.SuccessResponse;
 import com.ecom.product_service.service.BrandService;
 import com.ecom.product_service.service.MessageService;
 
@@ -48,18 +49,27 @@ public class BrandController {
     }
 
     @PostMapping
-    public ResponseEntity<BrandResponse> createBrand(@Valid @RequestBody BrandRequest request) {
+    public ResponseEntity<SuccessResponse<BrandResponse>> createBrand(@Valid @RequestBody BrandRequest request) {
         BrandResponse response = brandService.createBrand(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        String message = messageService.getMessage("success.brand.created");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(SuccessResponse.<BrandResponse>builder()
+                        .message(message)
+                        .data(response)
+                        .build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BrandResponse> updateBrand(
+    public ResponseEntity<SuccessResponse<BrandResponse>> updateBrand(
             @PathVariable Long id,
             @Valid @RequestBody BrandRequest request) {
 
         BrandResponse response = brandService.updateBrand(id, request);
-        return ResponseEntity.ok(response);
+        String message = messageService.getMessage("success.brand.updated");
+        return ResponseEntity.ok(SuccessResponse.<BrandResponse>builder()
+                .message(message)
+                .data(response)
+                .build());
     }
 
     @DeleteMapping("/{id}")

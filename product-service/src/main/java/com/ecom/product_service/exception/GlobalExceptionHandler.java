@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.ecom.product_service.response.ErrorResponse;
 import com.ecom.product_service.service.MessageService;
@@ -19,6 +21,9 @@ import com.ecom.product_service.service.MessageService;
 public class GlobalExceptionHandler {
 
     private final MessageService messageService;
+    
+    @Value("${spring.servlet.multipart.max-file-size:10MB}")
+    private String maxFileSize;
 
     public GlobalExceptionHandler(MessageService messageService) {
         this.messageService = messageService;
@@ -82,6 +87,18 @@ public class GlobalExceptionHandler {
                 message,
                 LocalDateTime.now());
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex) {
+        // Extract numeric value from maxFileSize (e.g., "10MB" -> "10")
+        String sizeValue = maxFileSize.replaceAll("[^0-9]", "");
+        
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                messageService.getMessage("error.upload.size-exceeded", new Object[]{sizeValue}),
+                LocalDateTime.now());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
