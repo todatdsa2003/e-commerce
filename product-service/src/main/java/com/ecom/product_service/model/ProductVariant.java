@@ -42,22 +42,26 @@ public class ProductVariant extends BaseEntity {
     @Column(name = "compare_at_price", precision = 12, scale = 2)
     private BigDecimal compareAtPrice;
 
+    @Builder.Default
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity = 0;
 
+    @Builder.Default
     @Column(name = "low_stock_threshold")
     private Integer lowStockThreshold = 5;
-
 
     @Column(name = "option_values", nullable = false, columnDefinition = "jsonb")
     private String optionValuesJson;
 
+    @Builder.Default
     @Column(name = "is_default")
     private Boolean isDefault = false;
 
+    @Builder.Default
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Builder.Default
     @Column(name = "display_order")
     private Integer displayOrder = 0;
 

@@ -33,6 +33,7 @@ public class ProductVariantOption extends BaseEntity {
     @Column(name = "option_values", nullable = false, columnDefinition = "TEXT[]")
     private String[] optionValues;
 
+    @Builder.Default
     @Column(name = "display_order")
     private Integer displayOrder = 0;
 }
