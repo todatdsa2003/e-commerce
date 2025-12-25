@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -49,7 +52,8 @@ public class ProductVariant extends BaseEntity {
     @Builder.Default
     @Column(name = "low_stock_threshold")
     private Integer lowStockThreshold = 5;
-
+    
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "option_values", nullable = false, columnDefinition = "jsonb")
     private String optionValuesJson;
 
