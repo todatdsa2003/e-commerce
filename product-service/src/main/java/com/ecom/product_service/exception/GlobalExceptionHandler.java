@@ -101,6 +101,23 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        // Handle pagination errors and other IllegalArgumentException
+        String message;
+        if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("page")) {
+            message = messageService.getMessage("error.pagination.invalid");
+        } else {
+            message = messageService.getMessage("error.internal", new Object[]{ex.getMessage()});
+        }
+        
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                LocalDateTime.now());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
         ErrorResponse error = new ErrorResponse(

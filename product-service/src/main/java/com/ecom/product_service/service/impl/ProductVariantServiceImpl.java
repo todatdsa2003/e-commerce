@@ -49,18 +49,18 @@ public class ProductVariantServiceImpl implements ProductVariantService {
             List<ProductVariantOptionRequest> requests) {
         log.info("Creating/updating variant options for productId: {}", productId);
 
-        // Validate product exists
+        
         Product product = findProductOrThrow(productId);
 
-        // Check if variants already exist
+        
         long variantCount = variantRepository.countActiveVariantsByProductId(productId);
         if (variantCount > 0) {
             log.error("Cannot update options: {} variants already exist for productId: {}", variantCount, productId);
             throw new BadRequestException(
-                    messageService.getMessage("variant.options.cannot.update.variants.exist"));
+                    messageService.getMessage("error.variant.cannot-update-options-with-existing-variants"));
         }
 
-        // Delete existing options
+        
         List<ProductVariantOption> existingOptions = variantOptionRepository.findByProductIdOrderByDisplayOrder(
                 productId);
         if (!existingOptions.isEmpty()) {
@@ -93,7 +93,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public List<ProductVariantOptionResponse> getVariantOptions(Long productId) {
         log.info("Fetching variant options for productId: {}", productId);
 
-        // Validate product exists
+        
         findProductOrThrow(productId);
 
         List<ProductVariantOption> options = variantOptionRepository.findByProductIdOrderByDisplayOrder(productId);
@@ -109,15 +109,15 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public void deleteVariantOptions(Long productId) {
         log.info("Deleting variant options for productId: {}", productId);
 
-        // Validate product exists
+        
         findProductOrThrow(productId);
 
-        // Check if variants already exist
+        
         long variantCount = variantRepository.countActiveVariantsByProductId(productId);
         if (variantCount > 0) {
             log.error("Cannot delete options: {} variants exist for productId: {}", variantCount, productId);
             throw new BadRequestException(
-                    messageService.getMessage("variant.options.cannot.delete.variants.exist"));
+                    messageService.getMessage("error.variant.cannot-delete-options-with-existing-variants"));
         }
 
         List<ProductVariantOption> options = variantOptionRepository.findByProductIdOrderByDisplayOrder(productId);
@@ -134,7 +134,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public ProductVariantResponse createVariant(Long productId, ProductVariantRequest request) {
         log.info("Creating variant for productId: {}, SKU: {}", productId, request.getSku());
 
-        // Validate product exists
+        
         Product product = findProductOrThrow(productId);
 
         // Validate SKU unique
@@ -201,7 +201,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public List<ProductVariantResponse> getVariants(Long productId, Boolean activeOnly) {
         log.info("Fetching variants for productId: {}, activeOnly: {}", productId, activeOnly);
 
-        // Validate product exists
         findProductOrThrow(productId);
 
         List<ProductVariant> variants;
@@ -231,14 +230,14 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public ProductVariantResponse getDefaultVariant(Long productId) {
         log.info("Fetching default variant for productId: {}", productId);
 
-        // Validate product exists
+        
         findProductOrThrow(productId);
 
         ProductVariant defaultVariant = variantRepository.findByProductIdAndIsDefaultTrueAndDeletedAtIsNull(productId)
                 .orElseThrow(() -> {
                     log.error("Default variant not found for productId: {}", productId);
                     return new ResourceNotFoundException(
-                            messageService.getMessage("variant.default.not.found"));
+                            messageService.getMessage("error.variant.default-not-found"));
                 });
 
         return variantMapper.toVariantResponse(defaultVariant);
@@ -295,11 +294,9 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
         ProductVariant variant = findVariantOrThrow(variantId);
 
-        // Soft delete
         variant.softDelete();
         variantRepository.save(variant);
 
-        // If this was the default variant, set another one as default
         if (variant.getIsDefault()) {
             List<ProductVariant> remainingVariants = variantRepository
                     .findByProductIdAndIsActiveTrueAndDeletedAtIsNullOrderByDisplayOrder(variant.getProduct().getId());
@@ -323,7 +320,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
         if (newStock < 0) {
             log.error("Invalid stock value: {} for variant ID: {}", newStock, variantId);
-            throw new BadRequestException(messageService.getMessage("variant.stock.invalid"));
+            throw new BadRequestException(messageService.getMessage("error.variant.stock-invalid"));
         }
 
         ProductVariant variant = findVariantOrThrow(variantId);
@@ -340,20 +337,15 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public ProductWithVariantsResponse getProductWithVariants(Long productId) {
         log.info("Fetching complete product with variants for productId: {}", productId);
 
-        // Validate product exists
         Product product = findProductOrThrow(productId);
 
-        // Get variant options
         List<ProductVariantOption> options = variantOptionRepository.findByProductIdOrderByDisplayOrder(productId);
 
-        // Get all variants
         List<ProductVariant> variants = variantRepository.findByProductIdAndDeletedAtIsNullOrderByDisplayOrder(productId);
 
-        // Get default variant
         ProductVariant defaultVariant = variantRepository.findByProductIdAndIsDefaultTrueAndDeletedAtIsNull(productId)
                 .orElse(null);
 
-        // Compute statistics
         Integer totalVariants = variantRepository.countActiveVariantsByProductId(productId);
         BigDecimal minPrice = variantRepository.findMinPriceByProductId(productId);
         BigDecimal maxPrice = variantRepository.findMaxPriceByProductId(productId);
@@ -388,44 +380,40 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return response;
     }
 
-    //Finds a product by ID or throws ResourceNotFoundException
     private Product findProductOrThrow(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> {
                     log.error("Product not found with ID: {}", productId);
                     return new ResourceNotFoundException(
-                            messageService.getMessage("product.not.found"));
+                            messageService.getMessage("error.product.not-found", new Object[]{productId}));
                 });
     }
 
-    //Finds a variant by ID or throws ResourceNotFoundException
     private ProductVariant findVariantOrThrow(Long variantId) {
         return variantRepository.findById(variantId)
                 .filter(v -> v.getDeletedAt() == null)
                 .orElseThrow(() -> {
                     log.error("Variant not found with ID: {}", variantId);
                     return new ResourceNotFoundException(
-                            messageService.getMessage("variant.not.found"));
+                            messageService.getMessage("error.variant.not-found", new Object[]{variantId}));
                 });
     }
 
-    //Validates that SKU is unique across all variants
     private void validateSkuUnique(String sku, Long excludeId) {
         variantRepository.findBySkuAndDeletedAtIsNull(sku).ifPresent(existing -> {
             if (excludeId == null || !existing.getId().equals(excludeId)) {
                 log.error("SKU already exists: {}", sku);
                 throw new BadRequestException(
-                        messageService.getMessage("variant.sku.already.exists"));
+                        messageService.getMessage("error.variant.sku-exists", new Object[]{sku}));
             }
         });
     }
 
-    //Validates that option values match the product's defined variant options
     private void validateOptionValues(Long productId, Map<String, String> optionValues) {
         if (optionValues == null || optionValues.isEmpty()) {
             log.error("Option values cannot be empty for productId: {}", productId);
             throw new BadRequestException(
-                    messageService.getMessage("variant.option.values.empty"));
+                    messageService.getMessage("error.variant.options-required"));
         }
 
         List<ProductVariantOption> productOptions = variantOptionRepository
@@ -434,7 +422,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         if (productOptions.isEmpty()) {
             log.error("No variant options defined for productId: {}", productId);
             throw new BadRequestException(
-                    messageService.getMessage("variant.options.not.defined"));
+                    messageService.getMessage("error.variant.no-options-defined"));
         }
 
         for (String optionName : optionValues.keySet()) {
@@ -444,10 +432,9 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                     .orElseThrow(() -> {
                         log.error("Invalid option name '{}' for productId: {}", optionName, productId);
                         return new BadRequestException(
-                                messageService.getMessage("variant.option.name.invalid"));
+                                messageService.getMessage("error.variant.option-mismatch"));
                     });
 
-            // Check option value is in allowed values
             String optionValue = optionValues.get(optionName);
             boolean valueExists = false;
             for (String allowedValue : matchingOption.getOptionValues()) {
@@ -461,12 +448,11 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 log.error("Invalid option value '{}' for option '{}' in productId: {}",
                         optionValue, optionName, productId);
                 throw new BadRequestException(
-                        messageService.getMessage("variant.option.value.invalid"));
+                        messageService.getMessage("error.variant.invalid-option-value", new Object[]{optionName, optionValue}));
             }
         }
     }
 
-    //Generates a human-readable variant name from option values
     private String generateVariantName(Map<String, String> optionValues) {
         if (optionValues == null || optionValues.isEmpty()) {
             return "Default";
@@ -474,7 +460,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return String.join(" / ", optionValues.values());
     }
 
-    //Unsets the current default variant for a product
     private void unsetCurrentDefaultVariant(Long productId) {
         variantRepository.findByProductIdAndIsDefaultTrueAndDeletedAtIsNull(productId)
                 .ifPresent(currentDefault -> {
@@ -485,7 +470,6 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 });
     }
 
-    //Converts option values map to JSON string for storage.
     private String convertMapToJson(Map<String, String> optionValues) {
         if (optionValues == null || optionValues.isEmpty()) {
             return "{}";
