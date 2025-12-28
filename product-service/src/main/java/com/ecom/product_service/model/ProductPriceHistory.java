@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,8 +30,12 @@ public class ProductPriceHistory {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "fk_price_product"))
+    @JoinColumn(name = "product_id", nullable = true, foreignKey = @ForeignKey(name = "fk_price_product"))
     private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id", nullable = true, foreignKey = @ForeignKey(name = "fk_price_history_variant"))
+    private ProductVariant variant;
 
     @Column(name = "old_price", precision = 12, scale = 2)
     private BigDecimal oldPrice;
@@ -38,6 +43,28 @@ public class ProductPriceHistory {
     @Column(name = "new_price", precision = 12, scale = 2)
     private BigDecimal newPrice;
 
+    @Column(name = "change_reason", columnDefinition = "TEXT")
+    private String changeReason;
+
+    @Column(name = "changed_by", length = 100)
+    private String changedBy;
+
     @Column(name = "changed_at")
     private LocalDateTime changedAt = LocalDateTime.now();
+
+    @Transient
+    public boolean isVariantPriceHistory() {
+        return variant != null;
+    }
+    
+    @Transient
+    public Long getEntityId() {
+        return variant != null ? variant.getId() : product.getId();
+    }
+
+
+    @Transient
+    public String getEntityType() {
+        return variant != null ? "VARIANT" : "PRODUCT";
+    }
 }
