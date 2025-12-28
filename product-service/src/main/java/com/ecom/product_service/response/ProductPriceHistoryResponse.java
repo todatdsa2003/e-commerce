@@ -17,8 +17,14 @@ public class ProductPriceHistoryResponse {
     private Long id;
     private Long productId;
     private String productName;
+    private Long variantId;
+    private String variantSku;
+    private String variantName;
+    private String entityType;
     private BigDecimal oldPrice;
     private BigDecimal newPrice;
     private BigDecimal priceChange;
+    private String changeReason;
+    private String changedBy;
     private LocalDateTime changedAt;
 }
