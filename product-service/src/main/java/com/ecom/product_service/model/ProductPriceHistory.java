@@ -43,6 +43,12 @@ public class ProductPriceHistory {
     @Column(name = "new_price", precision = 12, scale = 2)
     private BigDecimal newPrice;
 
+    @Column(name = "change_reason", columnDefinition = "TEXT")
+    private String changeReason;
+
+    @Column(name = "changed_by", length = 100)
+    private String changedBy;
+
     @Column(name = "changed_at")
     private LocalDateTime changedAt = LocalDateTime.now();
 

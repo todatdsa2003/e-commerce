@@ -25,6 +25,7 @@ import com.ecom.product_service.response.ProductVariantOptionResponse;
 import com.ecom.product_service.response.ProductVariantResponse;
 import com.ecom.product_service.response.ProductWithVariantsResponse;
 import com.ecom.product_service.service.MessageService;
+import com.ecom.product_service.service.ProductPriceHistoryService;
 import com.ecom.product_service.service.ProductVariantService;
 
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ProductRepository productRepository;
     private final ProductVariantMapper variantMapper;
     private final MessageService messageService;
+    private final ProductPriceHistoryService priceHistoryService;
 
     @Override
     @Transactional
@@ -263,9 +265,13 @@ public class ProductVariantServiceImpl implements ProductVariantService {
             variant.setOptionValuesJson(convertMapToJson(request.getOptionValues()));
         }
 
+        // Capture old price BEFORE updating
+        BigDecimal oldPrice = variant.getPrice();
+        BigDecimal newPrice = request.getPrice();
+
         // Update fields
         variant.setSku(request.getSku());
-        variant.setPrice(request.getPrice());
+        variant.setPrice(newPrice);
         variant.setCompareAtPrice(request.getCompareAtPrice());
         variant.setStockQuantity(request.getStockQuantity());
         variant.setLowStockThreshold(request.getLowStockThreshold());
@@ -282,6 +288,27 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         }
 
         ProductVariant updatedVariant = variantRepository.save(variant);
+        
+        // Create price history ONLY if price changed
+        if (oldPrice.compareTo(newPrice) != 0) {
+            try {
+                priceHistoryService.createPriceHistory(
+                    null, // productId = null for variant
+                    variantId,
+                    newPrice,
+                    "Price updated via variant update", // default reason
+                    "SYSTEM" // default changedBy
+                );
+                log.info("Created price history for variant ID: {} (old: {}, new: {})", 
+                    variantId, oldPrice, newPrice);
+            } catch (Exception e) {
+                log.error("Failed to create price history for variant ID: {}", variantId, e);
+                // Don't fail the whole update if price history fails
+            }
+        } else {
+            log.debug("Price unchanged for variant ID: {}, skipping price history creation", variantId);
+        }
+        
         log.info("Successfully updated variant ID: {}", variantId);
 
         return variantMapper.toVariantResponse(updatedVariant);

@@ -13,7 +13,13 @@ public interface ProductPriceHistoryMapper {
 
     @Mapping(source = "product.id", target = "productId")
     @Mapping(source = "product.name", target = "productName")
+    @Mapping(source = "variant.id", target = "variantId")
+    @Mapping(source = "variant.sku", target = "variantSku")
+    @Mapping(source = "variant.variantName", target = "variantName")
+    @Mapping(target = "entityType", expression = "java(priceHistory.getEntityType())")
     @Mapping(target = "priceChange", expression = "java(calculatePriceChange(priceHistory))")
+    @Mapping(source = "changeReason", target = "changeReason")
+    @Mapping(source = "changedBy", target = "changedBy")
     ProductPriceHistoryResponse toProductPriceHistoryResponse(ProductPriceHistory priceHistory);
     
     default BigDecimal calculatePriceChange(ProductPriceHistory priceHistory) {
