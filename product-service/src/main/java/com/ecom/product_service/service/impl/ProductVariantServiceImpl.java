@@ -291,20 +291,16 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         
         // Create price history ONLY if price changed
         if (oldPrice.compareTo(newPrice) != 0) {
-            try {
-                priceHistoryService.createPriceHistory(
-                    null, // productId = null for variant
-                    variantId,
-                    newPrice,
-                    "Price updated via variant update", // default reason
-                    "SYSTEM" // default changedBy
-                );
-                log.info("Created price history for variant ID: {} (old: {}, new: {})", 
-                    variantId, oldPrice, newPrice);
-            } catch (Exception e) {
-                log.error("Failed to create price history for variant ID: {}", variantId, e);
-                // Don't fail the whole update if price history fails
-            }
+            // Let exception propagate to trigger transaction rollback
+            priceHistoryService.createPriceHistory(
+                null, // productId = null for variant
+                variantId,
+                newPrice,
+                "Price updated via variant update", // default reason
+                "SYSTEM" // default changedBy
+            );
+            log.info("Created price history for variant ID: {} (old: {}, new: {})", 
+                variantId, oldPrice, newPrice);
         } else {
             log.debug("Price unchanged for variant ID: {}, skipping price history creation", variantId);
         }
