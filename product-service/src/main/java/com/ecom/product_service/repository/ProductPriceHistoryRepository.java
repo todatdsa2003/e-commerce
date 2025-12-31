@@ -22,7 +22,8 @@ public interface ProductPriceHistoryRepository extends JpaRepository<ProductPric
 
     @Query("SELECT pph FROM ProductPriceHistory pph " +
             "LEFT JOIN FETCH pph.product p " +
-            "WHERE p.id = :productId " +
+            "LEFT JOIN FETCH pph.variant v " +
+            "WHERE (p.id = :productId OR v.product.id = :productId) " +
             "AND (:minPrice IS NULL OR pph.newPrice >= :minPrice) " +
             "AND (:maxPrice IS NULL OR pph.newPrice <= :maxPrice)")
     Page<ProductPriceHistory> findByProductIdWithFilters(@Param("productId") Long productId,
