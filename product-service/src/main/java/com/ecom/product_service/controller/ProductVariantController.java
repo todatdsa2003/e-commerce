@@ -41,7 +41,7 @@ public class ProductVariantController {
     @PostMapping("/admin/products/{productId}/variants/options")
     public ResponseEntity<SuccessResponse<List<ProductVariantOptionResponse>>> createVariantOptions(
             @PathVariable Long productId,
-            @Valid @RequestBody List<ProductVariantOptionRequest> requests) {
+            @Valid @RequestBody List<@Valid ProductVariantOptionRequest> requests) {
 
         List<ProductVariantOptionResponse> responses = variantService.createOrUpdateVariantOptions(productId, requests);
         String message = messageService.getMessage("success.variant-option.created");
