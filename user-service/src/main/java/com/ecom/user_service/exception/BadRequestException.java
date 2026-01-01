@@ -1,0 +1,5 @@
+package com.ecom.user_service.exception;
+
+public class BadRequestException extends RuntimeException {
+    
+}
