@@ -34,9 +34,25 @@ public class AuthServiceImpl implements AuthService {
     public UserResponse register(RegisterRequest request) {
         log.info("Registering new user with email: {}", request.getEmail());
 
+        // Validate email not exists
         if (userRepository.existsByEmail(request.getEmail())) {
             log.error("Email already exists: {}", request.getEmail());
             throw new BadRequestException("Email already exists: " + request.getEmail());
+        }
+
+        // Validate password match
+        if (!request.getPassword().equals(request.getRetypePassword())) {
+            log.error("Passwords do not match for email: {}", request.getEmail());
+            throw new BadRequestException("Passwords do not match");
+        }
+        
+        // Validate phone number limit
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
+            long phoneCount = userRepository.countByPhoneNumber(request.getPhoneNumber());
+            if (phoneCount >= 2) {
+                log.error("Phone number {} already has 2 accounts registered", request.getPhoneNumber());
+                throw new BadRequestException("This phone number has reached the maximum limit of 2 accounts");
+            }
         }
 
         Role userRole = roleRepository.findByName(DEFAULT_ROLE)
