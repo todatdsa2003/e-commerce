@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ecom.user_service.dto.request.LoginRequest;
 import com.ecom.user_service.dto.request.RegisterRequest;
 import com.ecom.user_service.dto.response.UserResponse;
 import com.ecom.user_service.service.AuthService;
@@ -31,4 +32,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    //Login API
+    @PostMapping("/login")
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
+        log.info("Received login request for email: {}", request.getEmail());
+        UserResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
+    }
 }

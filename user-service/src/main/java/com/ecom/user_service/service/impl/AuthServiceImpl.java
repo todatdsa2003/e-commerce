@@ -60,4 +60,30 @@ public class AuthServiceImpl implements AuthService {
         return UserMapper.toResponse(savedUser);
     }
 
+    //Login method
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse login(LoginRequest request) {
+        log.info("Login attempt for email: {}", request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> {
+                    log.error("User not found with email: {}", request.getEmail());
+                    return new UnauthorizedException("Invalid email or password");
+                });
+
+        // Validate password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.error("Invalid password for email: {}", request.getEmail());
+            throw new UnauthorizedException("Invalid email or password");
+        }
+
+        // Check  user is active
+        if (!user.getIsActive()) {
+            log.error("User account is inactive: {}", request.getEmail());
+            throw new UnauthorizedException("User account is inactive");
+        }
+
+        log.info("User logged in successfully: {}", user.getId());
+        return UserMapper.toResponse(user);
+    }
 }
