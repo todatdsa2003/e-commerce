@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/user_service_db?currentSchema=public
     username: postgres
-    password: 
+    password: DatTo20032003@
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -27,6 +27,11 @@ spring:
     baseline-on-migrate: true
     schemas: public
     validate-on-migrate: true
+
+# JWT Configuration
+jwt:
+  secret: VGhpc0lzQVZlcnlTZWNyZXRLZXlGb3JKV1RUb2tlbkVuY3J5cHRpb25BbmREZWNyeXB0aW9uMTIzNDU2Nzg5MA==
+  expiration: 86400000  # 1 day in milliseconds
 
 logging:
   level:

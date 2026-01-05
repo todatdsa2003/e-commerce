@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ecom.user_service.dto.request.LoginRequest;
 import com.ecom.user_service.dto.request.RegisterRequest;
+import com.ecom.user_service.dto.response.AuthResponse;
 import com.ecom.user_service.dto.response.UserResponse;
 import com.ecom.user_service.exception.BadRequestException;
 import com.ecom.user_service.exception.UnauthorizedException;
@@ -14,6 +15,7 @@ import com.ecom.user_service.model.Role;
 import com.ecom.user_service.model.User;
 import com.ecom.user_service.repository.RoleRepository;
 import com.ecom.user_service.repository.UserRepository;
+import com.ecom.user_service.security.JwtTokenProvider;
 import com.ecom.user_service.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+    
     private static final String DEFAULT_ROLE = "ROLE_USER";
 
     @Override
@@ -79,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
     //Login method
     @Override
     @Transactional(readOnly = true)
-    public UserResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         log.info("Login attempt for email: {}", request.getEmail());
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> {
@@ -99,7 +103,14 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("User account is inactive");
         }
 
-        log.info("User logged in successfully: {}", user.getId());
-        return UserMapper.toResponse(user);
+        // Generate JWT token
+        String token = jwtTokenProvider.generateToken(user.getEmail());
+        log.info("JWT token generated for user: {}", user.getId());
+        UserResponse userResponse = UserMapper.toResponse(user);
+        return AuthResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .user(userResponse)
+                .build();
     }
 }
