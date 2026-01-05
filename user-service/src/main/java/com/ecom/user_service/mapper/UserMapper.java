@@ -1,15 +1,16 @@
 package com.ecom.user_service.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.ecom.user_service.dto.request.RegisterRequest;
 import com.ecom.user_service.dto.response.UserResponse;
 import com.ecom.user_service.model.Role;
 import com.ecom.user_service.model.User;
 
+@Component
 public class UserMapper {
 
-    private UserMapper() {
-    }
-    public static User toEntity(RegisterRequest request, String encodedPassword, Role role) {
+    public User toEntity(RegisterRequest request, String encodedPassword, Role role) {
         return User.builder()
                 .email(request.getEmail())
                 .password(encodedPassword)
@@ -20,7 +21,7 @@ public class UserMapper {
                 .build();
     }
 
-    public static UserResponse toResponse(User user) {
+    public UserResponse toUserResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
