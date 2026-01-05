@@ -30,6 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserMapper userMapper;
     
     private static final String DEFAULT_ROLE = "ROLE_USER";
 
@@ -72,12 +73,12 @@ public class AuthServiceImpl implements AuthService {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
         log.debug("Password encoded successfully");
 
-        User user = UserMapper.toEntity(request, encodedPassword, userRole);
+        User user = userMapper.toEntity(request, encodedPassword, userRole);
 
         User savedUser = userRepository.save(user);
         log.info("User registered successfully with id: {}", savedUser.getId());
 
-        return UserMapper.toResponse(savedUser);
+        return userMapper.toUserResponse(savedUser);
     }
 
     //Login method
@@ -106,7 +107,7 @@ public class AuthServiceImpl implements AuthService {
         // Generate JWT token
         String token = jwtTokenProvider.generateToken(user.getEmail());
         log.info("JWT token generated for user: {}", user.getId());
-        UserResponse userResponse = UserMapper.toResponse(user);
+        UserResponse userResponse = userMapper.toUserResponse(user);
         return AuthResponse.builder()
                 .token(token)
                 .type("Bearer")
