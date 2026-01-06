@@ -46,27 +46,32 @@ public class JwtFilter extends OncePerRequestFilter {
                 log.debug("JWT token validated for email: {}", email);
 
                 // Load user from database
-                User user = userRepository.findByEmail(email).orElse(null);
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> {
+                            log.warn("User not found: {}", email);
+                            return new RuntimeException("User not found");
+                        });
 
-                if (user != null && user.getIsActive()) {
-                    // Create authentication object
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().getName());
-                    
-                    UsernamePasswordAuthenticationToken authentication = 
-                        new UsernamePasswordAuthenticationToken(
-                            user.getEmail(),                           // Principal (email)
-                            null,                                      // Credentials (no password needed)
-                            Collections.singletonList(authority)       // Authorities (role)
-                        );
-                    
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    // Set authentication in SecurityContext
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.debug("User authenticated: {} with role: {}", email, user.getRole().getName());
-                } else {
-                    log.warn("User not found or inactive: {}", email);
+                // Check if user is active
+                if (!user.getIsActive()) {
+                    log.warn("User account is inactive: {}", email);
+                    throw new RuntimeException("User account is inactive");
                 }
+
+                SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().getName());
+                
+                UsernamePasswordAuthenticationToken authentication = 
+                    new UsernamePasswordAuthenticationToken(
+                        user.getEmail(),                           // Principal (email)
+                        null,                                      // Credentials (no password needed)
+                        Collections.singletonList(authority)       // Authorities (role)
+                    );
+                
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                // Set authentication in SecurityContext
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("User authenticated: {} with role: {}", email, user.getRole().getName());
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);
