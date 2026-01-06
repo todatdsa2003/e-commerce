@@ -30,8 +30,8 @@ spring:
 
 # JWT Configuration
 jwt:
-  secret: VGhpc0lzQVZlcnlTZWN1cmVTZWNyZXRLZXlGb3JKV1RUb2tlbkVuY3J5cHRpb25BbmREZWNyeXB0aW9uVGhhdE11c3RCZUF0TGVhc3QyNTZCaXRzTG9uZw
-  expiration: 86400000  # 1 day in milliseconds
+  secret: ${JWT_SECRET:VGhpc0lzQVZlcnlTZWN1cmVTZWNyZXRLZXlGb3JKV1RUb2tlbkVuY3J5cHRpb25BbmREZWNyeXB0aW9uVGhhdE11c3RCZUF0TGVhc3QyNTZCaXRzTG9uZw}
+  expiration: ${JWT_EXPIRATION:86400000}  # 1 day in milliseconds
 
 logging:
   level:
