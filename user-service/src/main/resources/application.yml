@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: user-service
+  profiles:
+    active: dev
 
   datasource:
     url: jdbc:postgresql://localhost:5432/user_service_db?currentSchema=public
@@ -31,7 +33,11 @@ spring:
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:VGhpc0lzQVZlcnlTZWN1cmVTZWNyZXRLZXlGb3JKV1RUb2tlbkVuY3J5cHRpb25BbmREZWNyeXB0aW9uVGhhdE11c3RCZUF0TGVhc3QyNTZCaXRzTG9uZw}
-  expiration: ${JWT_EXPIRATION:86400000}  # 1 day in milliseconds
+  expiration: ${JWT_EXPIRATION:86400000}  # 1 day in milliseconds (24 hours)
+  
+# Refresh Token Configuration
+refresh-token:
+  expiration: ${REFRESH_TOKEN_EXPIRATION:604800000}  
 
 logging:
   level:
