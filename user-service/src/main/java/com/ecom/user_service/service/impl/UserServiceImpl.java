@@ -21,92 +21,100 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    
+
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    
+
     @Override
     @Transactional(readOnly = true)
     public UserResponse getUserByEmail(String email) {
         log.debug("Fetching user by email: {}", email);
-        
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.error("User not found with email: {}", email);
                     return new NotFoundException("User not found with email: " + email);
                 });
-        
+
         log.debug("User found: {}", user.getId());
         return userMapper.toUserResponse(user);
     }
-    
+
     @Override
     @Transactional
     public UserResponse updateProfile(String email, UpdateProfileRequest request) {
         log.info("Updating profile for user: {}", email);
-        
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    log.error("User not found with email: {}", email);
-                    return new NotFoundException("User not found with email: " + email);
-                });
-        
-        // Validate phone number if changed
-        if (request.getPhoneNumber() != null && 
-            !request.getPhoneNumber().equals(user.getPhoneNumber())) {
-            
-            long phoneCount = userRepository.countByPhoneNumber(request.getPhoneNumber());
-            if (phoneCount >= 2) {
-                log.error("Phone number {} already has 2 accounts registered", request.getPhoneNumber());
-                throw new BadRequestException("This phone number has reached the maximum limit of 2 accounts");
-            }
-        }
-        
-        // Update fields
-        user.setFullName(request.getFullName());
-        user.setPhoneNumber(request.getPhoneNumber());
-        
-        User updatedUser = userRepository.save(user);
-        log.info("Profile updated successfully for user: {}", email);
-        
-        return userMapper.toUserResponse(updatedUser);
-    }
-    
-    @Override
-    @Transactional
-    public void changePassword(String email, ChangePasswordRequest request) {
-        log.info("Changing password for user: {}", email);
-        
+
         // Find user
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.error("User not found with email: {}", email);
                     return new NotFoundException("User not found with email: " + email);
                 });
-        
+
+        // Validate phone number limit if changed
+        String newPhone = request.getPhoneNumber();
+        if (newPhone != null && !newPhone.trim().isEmpty() &&
+                !newPhone.equals(user.getPhoneNumber())) {
+
+            long phoneCount = userRepository.countByPhoneNumber(newPhone);
+            if (phoneCount >= 2) {
+                log.error("Phone number {} already has 2 accounts registered", newPhone);
+                throw new BadRequestException("This phone number has reached the maximum limit of 2 accounts");
+            }
+        }
+
+        // Update fields
+        user.setFullName(request.getFullName());
+
+        // Allow setting phone to null/empty to remove phone number
+        if (newPhone == null || newPhone.trim().isEmpty()) {
+            user.setPhoneNumber(null);
+        } else {
+            user.setPhoneNumber(newPhone.trim());
+        }
+
+        User updatedUser = userRepository.save(user);
+        log.info("Profile updated successfully for user: {}", email);
+
+        return userMapper.toUserResponse(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String email, ChangePasswordRequest request) {
+        log.info("Changing password for user: {}", email);
+
+        // Find user
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.error("User not found with email: {}", email);
+                    return new NotFoundException("User not found with email: " + email);
+                });
+
         // Validate current password
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             log.error("Current password is incorrect for user: {}", email);
             throw new BadRequestException("Current password is incorrect");
         }
-        
+
         // Validate new password != current password
         if (request.getCurrentPassword().equals(request.getNewPassword())) {
             log.error("New password must be different from current password");
             throw new BadRequestException("New password must be different from current password");
         }
-        
+
         // Validate new password == confirm password
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             log.error("New password and confirm password do not match");
             throw new BadRequestException("New password and confirm password do not match");
         }
-        
+
         // Update password
         String encodedPassword = passwordEncoder.encode(request.getNewPassword());
         user.setPassword(encodedPassword);
-        
+
         userRepository.save(user);
         log.info("Password changed successfully for user: {}", email);
     }
