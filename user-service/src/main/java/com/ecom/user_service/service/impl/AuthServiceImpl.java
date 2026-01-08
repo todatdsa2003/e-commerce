@@ -11,12 +11,14 @@ import com.ecom.user_service.dto.response.UserResponse;
 import com.ecom.user_service.exception.BadRequestException;
 import com.ecom.user_service.exception.UnauthorizedException;
 import com.ecom.user_service.mapper.UserMapper;
+import com.ecom.user_service.model.RefreshToken;
 import com.ecom.user_service.model.Role;
 import com.ecom.user_service.model.User;
 import com.ecom.user_service.repository.RoleRepository;
 import com.ecom.user_service.repository.UserRepository;
 import com.ecom.user_service.security.JwtTokenProvider;
 import com.ecom.user_service.service.AuthService;
+import com.ecom.user_service.service.RefreshTokenService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserMapper userMapper;
+    private final RefreshTokenService refreshTokenService;
     
     private static final String DEFAULT_ROLE = "ROLE_USER";
 
@@ -83,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
 
     //Login method
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         log.info("Login attempt for email: {}", request.getEmail());
         User user = userRepository.findByEmail(request.getEmail())
@@ -104,14 +107,53 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("User account is inactive");
         }
 
-        // Generate JWT token
+        // Generate JWT token (24h)
         String token = jwtTokenProvider.generateToken(user.getEmail());
         log.info("JWT token generated for user: {}", user.getId());
+        
+        // Generate refresh token (long-lived, 7 days)
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
+        log.info("Refresh token generated for user: {}", user.getId());
+        
         UserResponse userResponse = userMapper.toUserResponse(user);
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken.getToken())
                 .type("Bearer")
                 .user(userResponse)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshToken(String refreshToken) {
+        log.info("Refreshing access token");
+    
+        RefreshToken validatedToken = refreshTokenService.validateRefreshToken(refreshToken);
+        User user = validatedToken.getUser();
+        
+        String newAccessToken = jwtTokenProvider.generateToken(user.getEmail());
+        log.info("New access token generated for user: {}", user.getEmail());
+        
+        UserResponse userResponse = userMapper.toUserResponse(user);
+        
+        return AuthResponse.builder()
+                .token(newAccessToken)
+                .refreshToken(refreshToken)
+                .type("Bearer")
+                .user(userResponse)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public void logout(String email) {
+        log.info("Logging out user: {}", email);
+        
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+        
+        refreshTokenService.revokeUserTokens(user);
+        log.info("User logged out successfully: {}", email);
     }
 }

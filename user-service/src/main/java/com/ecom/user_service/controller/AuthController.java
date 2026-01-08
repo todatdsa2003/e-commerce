@@ -2,12 +2,14 @@ package com.ecom.user_service.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.user_service.dto.request.LoginRequest;
+import com.ecom.user_service.dto.request.RefreshTokenRequest;
 import com.ecom.user_service.dto.request.RegisterRequest;
 import com.ecom.user_service.dto.response.AuthResponse;
 import com.ecom.user_service.dto.response.UserResponse;
@@ -39,5 +41,22 @@ public class AuthController {
         log.info("Received login request for email: {}", request.getEmail());
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    //Refresh Token API
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        log.info("Received refresh token request");
+        AuthResponse response = authService.refreshToken(request.getRefreshToken());
+        return ResponseEntity.ok(response);
+    }
+
+    //Logout API
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(Authentication authentication) {
+        log.info("Received logout request");
+        String email = authentication.getName();
+        authService.logout(email);
+        return ResponseEntity.noContent().build();
     }
 }
