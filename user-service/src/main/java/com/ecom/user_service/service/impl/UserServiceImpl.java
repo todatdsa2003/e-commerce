@@ -52,10 +52,11 @@ public class UserServiceImpl implements UserService {
                     log.error("User not found with email: {}", email);
                     return new NotFoundException("User not found with email: " + email);
                 });
+        String newFullName = request.getFullName() != null ? request.getFullName().trim() : null;
+        String newPhone = request.getPhoneNumber() != null ? request.getPhoneNumber().trim() : null;
 
         // Validate phone number limit if changed
-        String newPhone = request.getPhoneNumber();
-        if (newPhone != null && !newPhone.trim().isEmpty() &&
+        if (newPhone != null && !newPhone.isEmpty() &&
                 !newPhone.equals(user.getPhoneNumber())) {
 
             long phoneCount = userRepository.countByPhoneNumber(newPhone);
@@ -64,15 +65,11 @@ public class UserServiceImpl implements UserService {
                 throw new BadRequestException("This phone number has reached the maximum limit of 2 accounts");
             }
         }
-
-        // Update fields
-        user.setFullName(request.getFullName());
-
-        // Allow setting phone to null/empty to remove phone number
-        if (newPhone == null || newPhone.trim().isEmpty()) {
+        user.setFullName(newFullName);
+        if (newPhone == null || newPhone.isEmpty()) {
             user.setPhoneNumber(null);
         } else {
-            user.setPhoneNumber(newPhone.trim());
+            user.setPhoneNumber(newPhone);
         }
 
         User updatedUser = userRepository.save(user);
