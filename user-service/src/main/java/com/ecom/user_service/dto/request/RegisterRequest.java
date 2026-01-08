@@ -30,7 +30,11 @@ public class RegisterRequest {
     private String retypePassword;
 
     @NotBlank(message = "Full name is required")
-    @Size(max = 100, message = "Full name must not exceed 100 characters")
+    @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
+    @Pattern(
+        regexp = "^[a-zA-Z0-9\\s\\u00C0-\\u024F\\u1E00-\\u1EFF._'-]+$",
+        message = "Full name contains invalid characters. Only letters, numbers, spaces and common punctuation allowed"
+    )
     private String fullName;
 
     @Pattern(regexp = "^(\\+84|0)[0-9]{9,10}$", message = "Phone number must be valid Vietnamese format")

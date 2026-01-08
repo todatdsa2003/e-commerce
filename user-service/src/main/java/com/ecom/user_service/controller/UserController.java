@@ -28,15 +28,11 @@ public class UserController {
     
     private final UserService userService;
     
+    //Get current authenticated user profile
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
-            log.error("Authentication object is null or invalid");
-            throw new UnauthorizedException("Authentication required");
-        }
-        
-        String email = authentication.getName();
+        String email = getAuthenticatedEmail(authentication);
         log.info("User requesting profile: {}", email);
         
         UserResponse user = userService.getUserByEmail(email);
@@ -45,19 +41,14 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
     
-    //Update current user profile
+    //Update current user profile 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @PutMapping("/me")
     public ResponseEntity<UserResponse> updateProfile(
             Authentication authentication,
             @Valid @RequestBody UpdateProfileRequest request) {
         
-        if (authentication == null || authentication.getName() == null) {
-            log.error("Authentication object is null or invalid");
-            throw new UnauthorizedException("Authentication required");
-        }
-        
-        String email = authentication.getName();
+        String email = getAuthenticatedEmail(authentication);
         log.info("User requesting profile update: {}", email);
         
         UserResponse updatedUser = userService.updateProfile(email, request);
@@ -73,18 +64,21 @@ public class UserController {
             Authentication authentication,
             @Valid @RequestBody ChangePasswordRequest request) {
         
-        if (authentication == null || authentication.getName() == null) {
-            log.error("Authentication object is null or invalid");
-            throw new UnauthorizedException("Authentication required");
-        }
-        
-        String email = authentication.getName();
+        String email = getAuthenticatedEmail(authentication);
         log.info("User requesting password change: {}", email);
         
         userService.changePassword(email, request);
         log.info("Password changed successfully for user: {}", email);
         
-        //test
         return ResponseEntity.noContent().build();
+    }
+    
+    //Extract and validate authenticated user email from Spring Security Authentication
+    private String getAuthenticatedEmail(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            log.error("Authentication object is null or invalid");
+            throw new UnauthorizedException("Authentication required");
+        }
+        return authentication.getName();
     }
 }
