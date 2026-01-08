@@ -1,19 +1,21 @@
 package com.ecom.user_service.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ecom.user_service.exception.UnauthorizedException;
 import com.ecom.user_service.model.RefreshToken;
 import com.ecom.user_service.model.User;
 import com.ecom.user_service.repository.RefreshTokenRepository;
 import com.ecom.user_service.service.RefreshTokenService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
