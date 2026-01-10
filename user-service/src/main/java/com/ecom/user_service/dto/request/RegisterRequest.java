@@ -5,10 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterRequest {
@@ -39,4 +39,24 @@ public class RegisterRequest {
 
     @Pattern(regexp = "^(\\+84|0)[0-9]{9,10}$", message = "Phone number must be valid Vietnamese format")
     private String phoneNumber;
+
+    public void setEmail(String email) {
+        this.email = email != null ? email.trim() : null;
+    }
+
+    public void setPassword(String password) {
+        this.password = password != null ? password.trim() : null;
+    }
+
+    public void setRetypePassword(String retypePassword) {
+        this.retypePassword = retypePassword != null ? retypePassword.trim() : null;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName != null ? fullName.trim() : null;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber != null ? phoneNumber.trim() : null;
+    }
 }
