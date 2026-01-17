@@ -1,0 +1,70 @@
+# ============================================
+# Render Blueprint Configuration
+# ============================================
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # Web Service (Spring Boot API)
+  - type: web
+    name: product-service-api
+    runtime: docker
+    region: oregon  # or singapore for Asia
+    plan: free  # Change to 'starter' for production
+    
+    # Build settings
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    # Health check
+    healthCheckPath: /actuator/health
+    
+    # Auto-deploy from Git
+    autoDeploy: true
+    
+    # Environment variables
+    envVars:
+      # Spring Profile
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      
+      # Server Config
+      - key: SERVER_PORT
+        value: 8080
+      
+      # Database (Neon PostgreSQL)
+      - key: DB_URL
+        sync: false  # Set manually in Render dashboard
+      
+      - key: DB_USERNAME
+        sync: false  # Set manually in Render dashboard
+      
+      - key: DB_PASSWORD
+        sync: false  # Set manually in Render dashboard
+      
+      # File Upload
+      - key: UPLOAD_DIR
+        value: /app/uploads/products
+      
+      # Gemini API (Optional)
+      - key: GEMINI_API_KEY
+        sync: false  # Set manually if using AI features
+      
+      # JVM Options
+      - key: JAVA_OPTS
+        value: -Xmx512m -Xms256m
+    
+    # Disk storage for uploads (if not using cloud storage)
+    disk:
+      name: product-uploads
+      mountPath: /app/uploads
+      sizeGB: 1
+
+# ============================================
+# Alternative: Without render.yaml
+# ============================================
+# If you don't use render.yaml, configure in Render Dashboard:
+#
+# 1. Runtime: Docker
+# 2. Build Command: (leave empty, uses Dockerfile)
+# 3. Start Command: (leave empty, uses Dockerfile ENTRYPOINT)
+# 4. Environment Variables: Add all the envVars above

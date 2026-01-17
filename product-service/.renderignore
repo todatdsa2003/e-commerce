@@ -1,0 +1,31 @@
+# Render Ignore File
+# Files/folders to exclude from Render deployment
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Local development
+.env
+.env.local
+.env.*.local
+docker-compose*.yml
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Testing
+src/test/
+*.test.js
+coverage/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Misc
+.DS_Store
+Thumbs.db
