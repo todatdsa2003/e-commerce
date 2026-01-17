@@ -1,10 +1,31 @@
-HELP.md
+# ===================================
+# MAVEN BUILD FILES
+# ===================================
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
 
-### STS ###
+# ===================================
+# IDE SPECIFIC FILES
+# ===================================
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse/STS ###
 .apt_generated
 .classpath
 .factorypath
@@ -12,12 +33,7 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+bin/
 
 ### NetBeans ###
 /nbproject/private/
@@ -25,9 +41,136 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+### VS Code ###
+.vscode/
+*.code-workspace
+
+# ===================================
+# SENSITIVE & ENVIRONMENT FILES
+# ===================================
+
+# Configuration files with sensitive data
+application-dev.yml
+application-local.yml
+application-*.properties
+*-local.yml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# API Keys & Secrets
+**/secrets/
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+
+# ===================================
+# LOGS & TEMPORARY FILES
+# ===================================
+
+# Log files
+logs/
+*.log
+*.log.*
+log/
+spring.log
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===================================
+# UPLOADS & USER GENERATED CONTENT
+# ===================================
+
+# Uploaded files (except sample/test files)
+uploads/
+!uploads/.gitkeep
+data/images/
+!data/images/.gitkeep
+
+# ===================================
+# DATABASE FILES
+# ===================================
+
+# H2 Database
+*.db
+*.mv.db
+*.trace.db
+
+# SQLite
+*.sqlite
+*.sqlite3
+
+# ===================================
+# BUILD & PACKAGING
+# ===================================
+
+# JAR/WAR files (keep only final releases)
+*.jar
+*.war
+*.ear
+!.mvn/wrapper/maven-wrapper.jar
+
+# Build directories
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# ===================================
+# TESTING & COVERAGE
+# ===================================
+
+# Test coverage
+coverage/
+.coverage
+htmlcov/
+*.cover
+.pytest_cache/
+
+# ===================================
+# DOCKER & DEPLOYMENT
+# ===================================
+
+# Docker
+.dockerignore.local
+docker-compose.override.yml
+
+# Kubernetes secrets
+*secret*.yaml
+*secret*.yml
+
+# ===================================
+# OS SPECIFIC
+# ===================================
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+# ===================================
+# DOCUMENTATION (Optional)
+# ===================================
+
+# HELP.md (uncomment if needed)
+# HELP.md
