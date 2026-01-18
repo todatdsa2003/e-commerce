@@ -19,6 +19,11 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
+    disable-swagger-default-url: true
+  show-actuator: false
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  override-with-generic-response: false
 
 gemini:
   api:
