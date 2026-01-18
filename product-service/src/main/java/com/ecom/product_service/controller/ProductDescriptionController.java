@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "AI Product Description", description = "AI-powered product description generation")
+@Tag(name = "AI Product Description", description = "AI-powered product description generation (not working because of missing API key)")
 @RestController
 @RequestMapping("/api/v1/ai")
 @RequiredArgsConstructor
