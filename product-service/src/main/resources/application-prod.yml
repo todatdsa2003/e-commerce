@@ -30,6 +30,13 @@ logging:
     org.hibernate.SQL: WARN
     com.ecom.product_service: INFO
 
+# SpringDoc OpenAPI - ENABLED in Production for testing
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 management:
   endpoints:
     web:
