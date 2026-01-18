@@ -33,7 +33,7 @@ services:
       
       # Production URL (update after deployment)
       - key: PRODUCTION_URL
-        value: https://product-service.onrender.com
+        value: https://e-commerce-gwel.onrender.com
       
       # Database (Neon PostgreSQL)
       - key: DB_URL

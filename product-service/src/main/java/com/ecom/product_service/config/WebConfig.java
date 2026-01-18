@@ -29,7 +29,7 @@ public class WebConfig implements WebMvcConfigurer {
                     "http://localhost:5173",
                     "http://localhost:3000",
                     "http://localhost:8080",
-                    "https://product-service.onrender.com"
+                    "https://e-commerce-gwel.onrender.com"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")

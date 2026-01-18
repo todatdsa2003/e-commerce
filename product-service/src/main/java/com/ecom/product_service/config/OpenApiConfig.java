@@ -26,7 +26,7 @@ public class OpenApiConfig {
         localServer.setDescription("Local Development Server");
 
         Server productionServer = new Server();
-        productionServer.setUrl("https://product-service.onrender.com");
+        productionServer.setUrl("https://e-commerce-gwel.onrender.com");
         productionServer.setDescription("Production Server (Render)");
 
         Contact contact = new Contact();
