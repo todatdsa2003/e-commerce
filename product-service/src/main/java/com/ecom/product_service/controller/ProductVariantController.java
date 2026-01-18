@@ -26,10 +26,15 @@ import com.ecom.product_service.response.SuccessResponse;
 import com.ecom.product_service.service.MessageService;
 import com.ecom.product_service.service.ProductVariantService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-
+@Tag(name = "Product Variant", description = "Operations for managing product variants and variant options")
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -38,8 +43,18 @@ public class ProductVariantController {
     private final ProductVariantService variantService;
     private final MessageService messageService;
 
-    @PostMapping("/admin/products/{productId}/variants/options")
+    @Operation(
+        summary = "Create or update variant options",
+        description = "Define variant options (e.g., Size, Color) and their values for a product. This is the first step before creating variants."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Variant options successfully created"),
+        @ApiResponse(responseCode = "400", description = "Invalid request data"),
+        @ApiResponse(responseCode = "404", description = "Product not found")
+    })
+    @PostMapping("/products/{productId}/variants/options")
     public ResponseEntity<SuccessResponse<List<ProductVariantOptionResponse>>> createVariantOptions(
+            @Parameter(description = "Unique identifier of the product", example = "1", required = true)
             @PathVariable Long productId,
             @Valid @RequestBody List<@Valid ProductVariantOptionRequest> requests) {
 
@@ -53,20 +68,50 @@ public class ProductVariantController {
                         .build());
     }
 
-    @GetMapping("/admin/products/{productId}/variants/options")
-    public ResponseEntity<List<ProductVariantOptionResponse>> getVariantOptions(@PathVariable Long productId) {
+    @Operation(
+        summary = "Get variant options",
+        description = "Retrieve all variant options defined for a product."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved variant options"),
+        @ApiResponse(responseCode = "404", description = "Product not found")
+    })
+    @GetMapping("/products/{productId}/variants/options")
+    public ResponseEntity<List<ProductVariantOptionResponse>> getVariantOptions(
+            @Parameter(description = "Unique identifier of the product", example = "1", required = true)
+            @PathVariable Long productId) {
         List<ProductVariantOptionResponse> responses = variantService.getVariantOptions(productId);
         return ResponseEntity.ok(responses);
     }
 
-    @DeleteMapping("/admin/products/{productId}/variants/options")
-    public ResponseEntity<Void> deleteVariantOptions(@PathVariable Long productId) {
+    @Operation(
+        summary = "Delete variant options",
+        description = "Remove all variant options for a product. This will also delete associated variants."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Variant options successfully deleted"),
+        @ApiResponse(responseCode = "404", description = "Product not found")
+    })
+    @DeleteMapping("/products/{productId}/variants/options")
+    public ResponseEntity<Void> deleteVariantOptions(
+            @Parameter(description = "Unique identifier of the product", example = "1", required = true)
+            @PathVariable Long productId) {
         variantService.deleteVariantOptions(productId);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/admin/products/{productId}/variants")
+    @Operation(
+        summary = "Create single variant",
+        description = "Create a single product variant with specific option values, price, and stock information."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Variant successfully created"),
+        @ApiResponse(responseCode = "400", description = "Invalid variant data"),
+        @ApiResponse(responseCode = "404", description = "Product not found")
+    })
+    @PostMapping("/products/{productId}/variants")
     public ResponseEntity<SuccessResponse<ProductVariantResponse>> createVariant(
+            @Parameter(description = "Unique identifier of the product", example = "1", required = true)
             @PathVariable Long productId,
             @Valid @RequestBody ProductVariantRequest request) {
 
@@ -80,9 +125,18 @@ public class ProductVariantController {
                         .build());
     }
 
-
-    @PostMapping("/admin/products/{productId}/variants/bulk")
+    @Operation(
+        summary = "Create multiple variants in bulk",
+        description = "Create multiple product variants at once along with their variant options. Efficient way to set up all product variations."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Variants successfully created"),
+        @ApiResponse(responseCode = "400", description = "Invalid variant data"),
+        @ApiResponse(responseCode = "404", description = "Product not found")
+    })
+    @PostMapping("/products/{productId}/variants/bulk")
     public ResponseEntity<SuccessResponse<List<ProductVariantResponse>>> createVariantsBulk(
+            @Parameter(description = "Unique identifier of the product", example = "1", required = true)
             @PathVariable Long productId,
             @Valid @RequestBody BulkVariantRequest request) {
 
@@ -96,30 +150,69 @@ public class ProductVariantController {
                         .build());
     }
 
-    @GetMapping("/admin/products/{productId}/variants")
+    @Operation(
+        summary = "Get product variants",
+        description = "Retrieve all variants for a product with optional filtering for active variants only."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved variants"),
+        @ApiResponse(responseCode = "404", description = "Product not found")
+    })
+    @GetMapping("/products/{productId}/variants")
     public ResponseEntity<List<ProductVariantResponse>> getVariants(
+            @Parameter(description = "Unique identifier of the product", example = "1", required = true)
             @PathVariable Long productId,
+            @Parameter(description = "Filter for active variants only", example = "false")
             @RequestParam(defaultValue = "false") Boolean activeOnly) {
 
         List<ProductVariantResponse> responses = variantService.getVariants(productId, activeOnly);
         return ResponseEntity.ok(responses);
     }
 
-
-    @GetMapping("/admin/variants/{variantId}")
-    public ResponseEntity<ProductVariantResponse> getVariantById(@PathVariable Long variantId) {
+    @Operation(
+        summary = "Get variant by ID",
+        description = "Retrieve detailed information about a specific product variant."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved variant"),
+        @ApiResponse(responseCode = "404", description = "Variant not found")
+    })
+    @GetMapping("/variants/{variantId}")
+    public ResponseEntity<ProductVariantResponse> getVariantById(
+            @Parameter(description = "Unique identifier of the variant", example = "5", required = true)
+            @PathVariable Long variantId) {
         ProductVariantResponse response = variantService.getVariantById(variantId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/admin/products/{productId}/variants/default")
-    public ResponseEntity<ProductVariantResponse> getDefaultVariant(@PathVariable Long productId) {
+    @Operation(
+        summary = "Get default variant",
+        description = "Retrieve the default variant for a product. Useful for displaying initial product information."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved default variant"),
+        @ApiResponse(responseCode = "404", description = "Product or default variant not found")
+    })
+    @GetMapping("/products/{productId}/variants/default")
+    public ResponseEntity<ProductVariantResponse> getDefaultVariant(
+            @Parameter(description = "Unique identifier of the product", example = "1", required = true)
+            @PathVariable Long productId) {
         ProductVariantResponse response = variantService.getDefaultVariant(productId);
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/admin/variants/{variantId}")
+    @Operation(
+        summary = "Update variant",
+        description = "Update an existing variant's information including price, stock, and other properties."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Variant successfully updated"),
+        @ApiResponse(responseCode = "400", description = "Invalid variant data"),
+        @ApiResponse(responseCode = "404", description = "Variant not found")
+    })
+    @PutMapping("/variants/{variantId}")
     public ResponseEntity<SuccessResponse<ProductVariantResponse>> updateVariant(
+            @Parameter(description = "Unique identifier of the variant", example = "5", required = true)
             @PathVariable Long variantId,
             @Valid @RequestBody ProductVariantRequest request) {
 
@@ -132,8 +225,18 @@ public class ProductVariantController {
                 .build());
     }
 
-    @PatchMapping("/admin/variants/{variantId}/stock")
+    @Operation(
+        summary = "Update variant stock",
+        description = "Update only the stock quantity for a specific variant. Useful for inventory management."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Stock successfully updated"),
+        @ApiResponse(responseCode = "400", description = "Invalid stock quantity"),
+        @ApiResponse(responseCode = "404", description = "Variant not found")
+    })
+    @PatchMapping("/variants/{variantId}/stock")
     public ResponseEntity<SuccessResponse<ProductVariantResponse>> updateStock(
+            @Parameter(description = "Unique identifier of the variant", example = "5", required = true)
             @PathVariable Long variantId,
             @RequestBody Map<String, Integer> body) {
 
@@ -147,16 +250,34 @@ public class ProductVariantController {
                 .build());
     }
 
-
-    @DeleteMapping("/admin/variants/{variantId}")
-    public ResponseEntity<Void> deleteVariant(@PathVariable Long variantId) {
+    @Operation(
+        summary = "Delete variant",
+        description = "Soft delete (update deleted status) a product variant. This operation cannot be undone."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Variant successfully deleted"),
+        @ApiResponse(responseCode = "404", description = "Variant not found")
+    })
+    @DeleteMapping("/variants/{variantId}")
+    public ResponseEntity<Void> deleteVariant(
+            @Parameter(description = "Unique identifier of the variant", example = "5", required = true)
+            @PathVariable Long variantId) {
         variantService.deleteVariant(variantId);
         return ResponseEntity.noContent().build();
     }
 
-
-    @GetMapping("/products/{productId}/variants")
-    public ResponseEntity<ProductWithVariantsResponse> getProductWithVariants(@PathVariable Long productId) {
+    @Operation(
+        summary = "Get product with variants",
+        description = "Retrieve complete product information including all its variants. Public endpoint for displaying products on storefront."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved product with variants"),
+        @ApiResponse(responseCode = "404", description = "Product not found")
+    })
+    @GetMapping("/products/{productId}/variants/detail")
+    public ResponseEntity<ProductWithVariantsResponse> getProductWithVariants(
+            @Parameter(description = "Unique identifier of the product", example = "1", required = true)
+            @PathVariable Long productId) {
         ProductWithVariantsResponse response = variantService.getProductWithVariants(productId);
         return ResponseEntity.ok(response);
     }
