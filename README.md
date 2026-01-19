@@ -54,8 +54,7 @@ At this stage, the system relies on the deployed Swagger UI as the primary inter
 #### 2.1 Database Design
 Product Database Diagram
 
-![Product Database Diagrams](data/images/database1.png)
-![Product Database Diagrams](data/images/database2.png)
+![Product Database Diagrams](data/images/database.png)
 
 - products : Product master data with base information
 - product_variants : SKU-based variants with individual pricing and stock
@@ -66,6 +65,22 @@ Product Database Diagram
 - product_attributes : Flexible key-value attributes for product specifications
 - product_price_history : Historical price changes for products and variants
 - product_status : Product status codes (Active, Inactive, Draft, etc.)
+
+**Entity Relationship Overview**
+
+The schema is centered on `products` and is designed with normalized 1:N relationships for integrity and maintainability:
+
+- **Classification & Hierarchy**
+  - `categories` uses a self-referencing Parent-Child relationship; each category can contain many products.
+  - `brands` and `product_status` relate to products via 1:N to support classification and lifecycle state.
+
+- **Variant Architecture**
+  - `products` (1) -> (N) `product_variants` to represent multiple SKUs with independent stock and pricing.
+  - `product_variants` (1) -> (N) `product_variant_options` to define option combinations (e.g., size, color).
+
+- **Product Extensions & Audit**
+  - `products` (1) -> (N) `product_images` and `product_attributes` for media and flexible specifications.
+  - `product_price_history` links to `products` and optionally `product_variants` to track all price changes over time.
 
 Key Database Features:
 - Soft Delete: is_deleted flag on categories, brands, and products for data retention
