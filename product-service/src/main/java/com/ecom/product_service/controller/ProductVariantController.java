@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,13 +47,17 @@ public class ProductVariantController {
 
     @Operation(
         summary = "Create or update variant options",
-        description = "Define variant options (e.g., Size, Color) and their values for a product. This is the first step before creating variants."
+        description = "Define variant options and their values for a product. Requires ADMIN role "
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Variant options successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid request data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/products/{productId}/variants/options")
     public ResponseEntity<SuccessResponse<List<ProductVariantOptionResponse>>> createVariantOptions(
             @Parameter(description = "Unique identifier of the product", example = "1", required = true)
@@ -86,12 +92,16 @@ public class ProductVariantController {
 
     @Operation(
         summary = "Delete variant options",
-        description = "Remove all variant options for a product. This will also delete associated variants."
+        description = "Remove all variant options for a product. Requires ADMIN role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Variant options successfully deleted"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/products/{productId}/variants/options")
     public ResponseEntity<Void> deleteVariantOptions(
             @Parameter(description = "Unique identifier of the product", example = "1", required = true)
@@ -102,13 +112,17 @@ public class ProductVariantController {
 
     @Operation(
         summary = "Create single variant",
-        description = "Create a single product variant with specific option values, price, and stock information."
+        description = "Create a single product variant with specific option values, price, and stock information. Requires ADMIN role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Variant successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid variant data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/products/{productId}/variants")
     public ResponseEntity<SuccessResponse<ProductVariantResponse>> createVariant(
             @Parameter(description = "Unique identifier of the product", example = "1", required = true)
@@ -127,13 +141,17 @@ public class ProductVariantController {
 
     @Operation(
         summary = "Create multiple variants in bulk",
-        description = "Create multiple product variants at once along with their variant options. Efficient way to set up all product variations."
+        description = "Create multiple product variants at once along with their variant options. Requires ADMIN role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Variants successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid variant data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/products/{productId}/variants/bulk")
     public ResponseEntity<SuccessResponse<List<ProductVariantResponse>>> createVariantsBulk(
             @Parameter(description = "Unique identifier of the product", example = "1", required = true)
@@ -203,13 +221,17 @@ public class ProductVariantController {
 
     @Operation(
         summary = "Update variant",
-        description = "Update an existing variant's information including price, stock, and other properties."
+        description = "Update an existing variant's information including price, stock, and other properties. Requires ADMIN role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Variant successfully updated"),
         @ApiResponse(responseCode = "400", description = "Invalid variant data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Variant not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PutMapping("/variants/{variantId}")
     public ResponseEntity<SuccessResponse<ProductVariantResponse>> updateVariant(
             @Parameter(description = "Unique identifier of the variant", example = "5", required = true)
@@ -227,13 +249,17 @@ public class ProductVariantController {
 
     @Operation(
         summary = "Update variant stock",
-        description = "Update only the stock quantity for a specific variant. Useful for inventory management."
+        description = "Update only the stock quantity for a specific variant. Requires ADMIN role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Stock successfully updated"),
         @ApiResponse(responseCode = "400", description = "Invalid stock quantity"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Variant not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PatchMapping("/variants/{variantId}/stock")
     public ResponseEntity<SuccessResponse<ProductVariantResponse>> updateStock(
             @Parameter(description = "Unique identifier of the variant", example = "5", required = true)
@@ -252,12 +278,16 @@ public class ProductVariantController {
 
     @Operation(
         summary = "Delete variant",
-        description = "Soft delete (update deleted status) a product variant. This operation cannot be undone."
+        description = "Soft delete (update deleted status) a product variant. Requires ADMIN role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Variant successfully deleted"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Variant not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/variants/{variantId}")
     public ResponseEntity<Void> deleteVariant(
             @Parameter(description = "Unique identifier of the variant", example = "5", required = true)
