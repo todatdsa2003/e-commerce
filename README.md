@@ -105,11 +105,13 @@ For the service, the project follows a layered architecture:
 - spring-boot-starter-actuator : Monitoring and health management
 - spring-boot-starter-data-jpa : Spring Data JPA for database operations
 - spring-boot-starter-validation : Jakarta Bean Validation
+- spring-boot-starter-security : Authentication and authorization (JWT-based)
 - postgresql : PostgreSQL database driver
 - flyway-core : Database migration management
 - mapstruct : Object mapping code generator
 - lombok : Reduce boilerplate code
 - springdoc-openapi-starter-webmvc-ui : OpenAPI 3 / Swagger UI documentation
+- jjwt (api/impl/jackson) : JWT parsing and validation
 - spring-boot-starter-test : Testing components
 - spring-boot-devtools : Development environment support
 
@@ -122,54 +124,74 @@ The service provides interactive API documentation using Swagger UI. In the abse
 
 **Local Development URL**: http://localhost:8080/swagger-ui.html
 
+Authentication and Authorization
+The service uses stateless JWT authentication. Public endpoints are accessible without a token, while write/admin operations require a valid JWT in the `Authorization` header and an `ADMIN` role where enforced.
+
+Swagger UI Authorization
+Use the `Authorize` button and provide the token value as: `Bearer <JWT>`.
+
 ![Swagger UI](data/images/swagger_ui.png)
 
 ##### Main API Endpoints
 
-**Brand Management**
+**Brand Management (Public)**
 ```
 GET    /api/v1/brands              - List all brands (paginated, searchable)
 GET    /api/v1/brands/{id}         - Get brand by ID
-POST   /api/v1/brands              - Create new brand
-PUT    /api/v1/brands/{id}         - Update brand
-DELETE /api/v1/brands/{id}         - Soft delete brand
 ```
 
-**Category Management**
+**Brand Management (Admin - Requires ADMIN role)**
+```
+POST   /api/v1/admin/brands        - Create new brand
+PUT    /api/v1/admin/brands/{id}   - Update brand
+DELETE /api/v1/admin/brands/{id}   - Soft delete brand
+```
+
+**Category Management (Public)**
 ```
 GET    /api/v1/categories          - List all categories (paginated, searchable)
 GET    /api/v1/categories/{id}     - Get category by ID
-POST   /api/v1/categories          - Create new category
-PUT    /api/v1/categories/{id}     - Update category
-DELETE /api/v1/categories/{id}     - Soft delete category
 ```
 
-**Product Management**
+**Category Management (Admin - Requires ADMIN role)**
+```
+POST   /api/v1/admin/categories        - Create new category
+PUT    /api/v1/admin/categories/{id}   - Update category
+DELETE /api/v1/admin/categories/{id}   - Soft delete category
+```
+
+**Product Management (Public)**
 ```
 GET    /api/v1/products            - List all products (paginated, searchable)
 GET    /api/v1/products/{id}       - Get product by ID
-POST   /api/v1/products            - Create new product
-PUT    /api/v1/products/{id}       - Update product
-DELETE /api/v1/products/{id}       - Soft delete product
+```
+
+**Product Management (Admin - Requires ADMIN role)**
+```
+POST   /api/v1/admin/products        - Create new product
+PUT    /api/v1/admin/products/{id}   - Update product
+DELETE /api/v1/admin/products/{id}   - Soft delete product
 ```
 
 **Product Variant Management**
 ```
+GET    /api/v1/products/{productId}/variants/options      - Get variant options (public)
+POST   /api/v1/products/{productId}/variants/options      - Create/update variant options (ADMIN)
+DELETE /api/v1/products/{productId}/variants/options      - Delete variant options (ADMIN)
 GET    /api/v1/products/{productId}/variants              - List product variants
 GET    /api/v1/products/{productId}/variants/{id}         - Get variant by ID
-POST   /api/v1/products/{productId}/variants              - Create new variant
-PUT    /api/v1/products/{productId}/variants/{id}         - Update variant
-DELETE /api/v1/products/{productId}/variants/{id}         - Delete variant
-POST   /api/v1/products/{productId}/variants/bulk         - Bulk create variants
+POST   /api/v1/products/{productId}/variants              - Create new variant (ADMIN)
+PUT    /api/v1/products/{productId}/variants/{id}         - Update variant (ADMIN)
+DELETE /api/v1/products/{productId}/variants/{id}         - Delete variant (ADMIN)
+POST   /api/v1/products/{productId}/variants/bulk         - Bulk create variants (ADMIN)
 ```
 
 **Product Image Management**
 ```
 GET    /api/v1/products/{productId}/images                - List product images
 GET    /api/v1/products/{productId}/images/{id}           - Get image by ID
-POST   /api/v1/products/{productId}/images                - Upload product image
-PUT    /api/v1/products/{productId}/images/{id}           - Update image
-DELETE /api/v1/products/{productId}/images/{id}           - Delete image
+POST   /api/v1/products/{productId}/images                - Upload product image (ADMIN)
+POST   /api/v1/products/{productId}/images/multiple       - Upload multiple images (ADMIN)
 ```
 
 **Price History**
@@ -214,6 +236,10 @@ cp .env.example .env
 DB_URL=jdbc:postgresql://localhost:5432/product_service_db
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
+
+# JWT configuration (token is issued by an authentication service)
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRATION=86400000
 ```
 
 **3. Create database**
