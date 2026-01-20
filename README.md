@@ -124,11 +124,6 @@ The service provides interactive API documentation using Swagger UI. In the abse
 
 ![Swagger UI](data/images/swagger_ui.png)
 
-**IMAGE NEEDED**: Screenshot of Swagger UI showing:
-- List of API endpoints grouped by controllers
-- Example of expanded endpoint with parameters
-- Request/Response examples
-
 ##### Main API Endpoints
 
 **Brand Management**
