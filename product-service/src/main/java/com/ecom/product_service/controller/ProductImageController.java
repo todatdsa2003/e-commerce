@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -34,7 +36,7 @@ public class ProductImageController {
 
     @Operation(
         summary = "Get product images",
-        description = "Retrieve all images associated with a specific product, including thumbnails and detail images."
+        description = "Retrieve all images associated with a specific product. Public access."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved images"),
@@ -50,13 +52,17 @@ public class ProductImageController {
 
     @Operation(
         summary = "Add product image",
-        description = "Upload and attach a single image to a product. Optionally mark it as the thumbnail image."
+        description = "Upload and attach a single image to a product. Requires ADMIN role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Image successfully uploaded"),
         @ApiResponse(responseCode = "400", description = "Invalid file or file type not supported"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ProductImageResponse> addImage(
             @Parameter(description = "Unique identifier of the product", example = "1", required = true) 
@@ -76,13 +82,17 @@ public class ProductImageController {
 
     @Operation(
         summary = "Add multiple product images",
-        description = "Upload and attach multiple images to a product in a single request. Useful for bulk image uploads."
+        description = "Upload and attach multiple images to a product in a single request. Requires ADMIN role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Images successfully uploaded"),
         @ApiResponse(responseCode = "400", description = "Invalid files or file types not supported"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/multiple")
     public ResponseEntity<List<ProductImageResponse>> addMultipleImages(
             @Parameter(description = "Unique identifier of the product", example = "1", required = true) 
