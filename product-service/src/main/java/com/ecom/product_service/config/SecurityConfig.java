@@ -10,14 +10,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.ecom.product_service.security.CustomAccessDeniedHandler;
+import com.ecom.product_service.security.JwtAuthenticationEntryPoint;
 import com.ecom.product_service.security.JwtAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * SecurityConfig configures Spring Security for the application
- * This includes JWT authentication, authorization rules, and CORS settings
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -25,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -35,6 +35,12 @@ public class SecurityConfig {
             // Configure session management to be stateless
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            
+            // Configure exception handling for authentication and authorization errors
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .accessDeniedHandler(customAccessDeniedHandler)
             )
             
             // Configure authorization rules
