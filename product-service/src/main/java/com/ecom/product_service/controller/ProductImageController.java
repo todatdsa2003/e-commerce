@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.ecom.product_service.response.ProductImageResponse;
 import com.ecom.product_service.service.ProductImageService;
+import com.ecom.product_service.util.FileValidator;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -57,7 +58,7 @@ public class ProductImageController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Image successfully uploaded"),
         @ApiResponse(responseCode = "400", description = "Invalid file or file type not supported"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
@@ -76,6 +77,9 @@ public class ProductImageController {
             @Parameter(description = "Whether this image should be the product thumbnail", example = "false") 
             @RequestParam(value = "isThumbnail", defaultValue = "false") Boolean isThumbnail) {
         
+        // Validate file before processing
+        FileValidator.validateImageFile(file);
+        
         ProductImageResponse response = productImageService.addImage(productId, file, isThumbnail);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -87,7 +91,7 @@ public class ProductImageController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Images successfully uploaded"),
         @ApiResponse(responseCode = "400", description = "Invalid files or file types not supported"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
@@ -103,6 +107,9 @@ public class ProductImageController {
                 content = @Content(mediaType = "multipart/form-data")
             )
             @RequestParam("files") List<MultipartFile> files) {
+        
+        // Validate each file before processing
+        files.forEach(FileValidator::validateImageFile);
         
         List<ProductImageResponse> responses = productImageService.addMultipleImages(productId, files);
         return ResponseEntity.status(HttpStatus.CREATED).body(responses);
