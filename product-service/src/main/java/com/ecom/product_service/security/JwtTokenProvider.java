@@ -1,5 +1,6 @@
 package com.ecom.product_service.security;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.List;
@@ -32,7 +33,16 @@ public class JwtTokenProvider {
     private Long jwtExpiration;
 
     private Key getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes();
+        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        
+        if (keyBytes.length < 32) {
+            throw new IllegalArgumentException(
+                "JWT secret key must be at least 256 bits (32 characters) for HS256 algorithm. " +
+                "Current length: " + keyBytes.length + " bytes. " +
+                "Please set a longer JWT_SECRET environment variable."
+            );
+        }
+        
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
