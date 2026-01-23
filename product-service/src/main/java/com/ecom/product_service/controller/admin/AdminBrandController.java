@@ -47,7 +47,7 @@ public class AdminBrandController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Brand successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid brand data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role")
     })
     @PostMapping
@@ -68,7 +68,7 @@ public class AdminBrandController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Brand successfully updated"),
         @ApiResponse(responseCode = "400", description = "Invalid brand data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Brand not found")
     })
@@ -92,7 +92,7 @@ public class AdminBrandController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Brand successfully deleted"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Brand not found")
     })

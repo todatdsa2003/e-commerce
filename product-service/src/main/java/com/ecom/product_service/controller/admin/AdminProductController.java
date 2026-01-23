@@ -47,7 +47,7 @@ public class AdminProductController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Product successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid product data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role")
     })
     @PostMapping
@@ -68,7 +68,7 @@ public class AdminProductController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Product successfully updated"),
         @ApiResponse(responseCode = "400", description = "Invalid product data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
@@ -92,7 +92,7 @@ public class AdminProductController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Product successfully deleted"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })

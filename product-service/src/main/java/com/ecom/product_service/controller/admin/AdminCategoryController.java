@@ -46,7 +46,7 @@ public class AdminCategoryController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Category successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid category data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role")
     })
     @PostMapping
@@ -67,7 +67,7 @@ public class AdminCategoryController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Category successfully updated"),
         @ApiResponse(responseCode = "400", description = "Invalid category data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Category not found")
     })
@@ -91,7 +91,7 @@ public class AdminCategoryController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Category successfully deleted"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Category not found")
     })

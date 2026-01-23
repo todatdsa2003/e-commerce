@@ -52,7 +52,7 @@ public class ProductVariantController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Variant options successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid request data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
@@ -96,7 +96,7 @@ public class ProductVariantController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Variant options successfully deleted"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
@@ -117,7 +117,7 @@ public class ProductVariantController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Variant successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid variant data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
@@ -146,7 +146,7 @@ public class ProductVariantController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Variants successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid variant data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Product not found")
     })
@@ -226,7 +226,7 @@ public class ProductVariantController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Variant successfully updated"),
         @ApiResponse(responseCode = "400", description = "Invalid variant data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Variant not found")
     })
@@ -254,7 +254,7 @@ public class ProductVariantController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Stock successfully updated"),
         @ApiResponse(responseCode = "400", description = "Invalid stock quantity"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Variant not found")
     })
@@ -282,7 +282,7 @@ public class ProductVariantController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Variant successfully deleted"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT token"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
         @ApiResponse(responseCode = "404", description = "Variant not found")
     })

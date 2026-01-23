@@ -16,24 +16,41 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     @Value("${file.upload-dir:uploads/products}")
     private String uploadDir;
 
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                    "http://localhost:5173",
-                    "http://localhost:3000",
-                    "http://localhost:8080",
-                    "https://e-commerce-gwel.onrender.com"
-                )
+                        "http://localhost:5173",
+                        "http://localhost:3000",
+                        "https://e-commerce-gwel.onrender.com")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders("*")
-                .exposedHeaders("*")
+                .allowedHeaders(
+                        "Authorization",
+                        "Content-Type",
+                        "Accept",
+                        "X-Requested-With",
+                        "Accept-Language")
+                .exposedHeaders(
+                        "Authorization",
+                        "Content-Disposition")
                 .allowCredentials(true)
                 .maxAge(3600);
     }
@@ -55,7 +72,7 @@ public class WebConfig implements WebMvcConfigurer {
         resolver.setDefaultLocale(Locale.forLanguageTag("vi"));
         resolver.setCookieMaxAge(Duration.ofDays(30)); // Cookie ton tai 30 ngay
         resolver.setCookiePath("/");
-        
+
         return resolver;
     }
 
