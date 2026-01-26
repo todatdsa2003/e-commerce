@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +40,7 @@ public class ProductPriceHistoryController {
 
     @Operation(
         summary = "Get product price history (paginated)",
-        description = "Retrieve paginated price change history for a specific product with optional price range filtering."
+        description = "Retrieve paginated price change history for a specific product with optional price range filtering. Public access."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved price history"),
@@ -64,13 +66,17 @@ public class ProductPriceHistoryController {
 
     @Operation(
         summary = "Create price history record",
-        description = "Record a price change for a product or variant. Tracks the new price, reason for change, and who made the change."
+        description = "Record a price change for a product or variant. Tracks the new price, reason for change, and who made the change. Requires ADMIN or SELLER role."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Price history record successfully created"),
         @ApiResponse(responseCode = "400", description = "Invalid request data or validation error"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN or SELLER role"),
         @ApiResponse(responseCode = "404", description = "Product or variant not found")
     })
+    @SecurityRequirement(name = "bearer-jwt")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
     @PostMapping("/price-history")
     public ResponseEntity<ProductPriceHistoryResponse> createPriceHistory(
             @Valid @RequestBody ProductPriceHistoryRequest request) {
