@@ -52,8 +52,8 @@ public class UserServiceImpl implements UserService {
                     log.error("User not found with email: {}", email);
                     return new NotFoundException("User not found with email: " + email);
                 });
-        String newFullName = request.getFullName() != null ? request.getFullName().trim() : null;
-        String newPhone = request.getPhoneNumber() != null ? request.getPhoneNumber().trim() : null;
+        String newFullName = request.getFullName();
+        String newPhone = request.getPhoneNumber();
 
         // Validate phone number limit if changed
         if (newPhone != null && !newPhone.isEmpty() &&

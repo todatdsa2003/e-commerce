@@ -14,4 +14,6 @@ public interface AuthService {
     AuthResponse refreshToken(String refreshToken);
     
     void logout(String email);
+    
+    String processOAuth2Login(String email, String name, String facebookId);
 }
