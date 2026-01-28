@@ -156,4 +156,48 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenService.revokeUserTokens(user);
         log.info("User logged out successfully: {}", email);
     }
+
+    @Override
+    @Transactional
+    public String processOAuth2Login(String email, String name, String facebookId) {
+        log.info("Processing OAuth2 login for email: {}", email);
+        
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
+            log.info("Creating new user from Facebook login: {}", email);
+            
+            // Get or create default role
+            Role userRole = roleRepository.findByName(DEFAULT_ROLE)
+                    .orElseGet(() -> {
+                        log.info("Creating default role: {}", DEFAULT_ROLE);
+                        Role newRole = Role.builder()
+                                .name(DEFAULT_ROLE)
+                                .description("Default user role")
+                                .build();
+                        return roleRepository.save(newRole);
+                    });
+            
+            // Create new user from Facebook data
+            User newUser = User.builder()
+                    .email(email)
+                    .fullName(name != null ? name : "Facebook User")
+                    .password(passwordEncoder.encode(facebookId)) // Encode Facebook ID as password
+                    .role(userRole)
+                    .isActive(true)
+                    .build();
+            
+            return userRepository.save(newUser);
+        });
+        
+        // Check if user is active
+        if (!user.getIsActive()) {
+            log.error("User account is inactive: {}", email);
+            throw new UnauthorizedException("User account is inactive");
+        }
+        
+        // Generate JWT token
+        String token = jwtTokenProvider.generateToken(user.getEmail());
+        log.info("JWT token generated for OAuth2 user: {}", user.getEmail());
+        
+        return token;
+    }
 }

@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/user_service_db?currentSchema=public
     username: postgres
-    password: DatTo20032003@
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -29,6 +29,28 @@ spring:
     baseline-on-migrate: true
     schemas: public
     validate-on-migrate: true
+  
+   # OAuth2 Configuration
+  spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          facebook:
+            client-id: ${FACEBOOK_CLIENT_ID}
+            client-secret: ${FACEBOOK_CLIENT_SECRET}
+            scope:
+              - email
+              - public_profile
+            # Chú ý: Redirect URI này phải khớp 100% với cấu hình trên Meta Dashboard
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          facebook:
+            # Thay v18.0 bằng phiên bản mới nhất (ví dụ v24.0)
+            authorization-uri: https://www.facebook.com/v24.0/dialog/oauth
+            token-uri: https://graph.facebook.com/v24.0/oauth/access_token
+            user-info-uri: https://graph.facebook.com/v24.0/me?fields=id,name,email,picture
+            user-name-attribute: id
 
 # JWT Configuration
 jwt:
@@ -37,7 +59,8 @@ jwt:
   
 # Refresh Token Configuration
 refresh-token:
-  expiration: ${REFRESH_TOKEN_EXPIRATION:604800000}  
+  expiration: ${REFRESH_TOKEN_EXPIRATION:604800000}
+ 
 
 logging:
   level:
