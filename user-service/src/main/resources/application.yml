@@ -31,7 +31,6 @@ spring:
     validate-on-migrate: true
   
    # OAuth2 Configuration
-  spring:
   security:
     oauth2:
       client:
@@ -69,4 +68,13 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
     org.springframework.security: DEBUG
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Địa chỉ của Discovery Server
+    fetch-registry: true # Lấy danh sách các service khác về
+    register-with-eureka: true # Đăng ký chính mình lên server
+  instance:
+    prefer-ip-address: true
 
