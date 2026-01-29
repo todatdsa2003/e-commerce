@@ -6,7 +6,7 @@ server:
   port: ${SERVER_PORT:8080}
 
 file:
-  upload-dir: ${UPLOAD_DIR:uploads/products}# JWT Configuration
+  upload-dir: ${UPLOAD_DIR:uploads/products}
 jwt:
   secret: ${JWT_SECRET}
   # Token expiration: 30 minutes (1800000ms) for security
@@ -33,3 +33,12 @@ gemini:
   api:
     url: https://generativelanguage.googleapis.com/v1beta/models
   model: gemini-2.5-flash
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
