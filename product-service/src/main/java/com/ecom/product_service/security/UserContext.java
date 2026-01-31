@@ -7,11 +7,11 @@ public class UserContext {
 
     public static UserPrincipal getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
+
         if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
             return (UserPrincipal) authentication.getPrincipal();
         }
-        
+
         return null;
     }
 
@@ -25,14 +25,37 @@ public class UserContext {
         return user != null ? user.getUsername() : null;
     }
 
-
     public static String getCurrentUserEmail() {
         UserPrincipal user = getCurrentUser();
         return user != null ? user.getEmail() : null;
     }
 
+    public static String getCurrentUserFullName() {
+        UserPrincipal user = getCurrentUser();
+        return user != null ? user.getFullName() : null;
+    }
+
+    public static String getCurrentUserPhoneNumber() {
+        UserPrincipal user = getCurrentUser();
+        return user != null ? user.getPhoneNumber() : null;
+    }
+
+    public static String getCurrentUserRole() {
+        UserPrincipal user = getCurrentUser();
+        return user != null ? user.getRole() : null;
+    }
+
+    public static Boolean isCurrentUserActive() {
+        UserPrincipal user = getCurrentUser();
+        return user != null ? user.getIsActive() : null;
+    }
+
     public static boolean hasRole(String role) {
         UserPrincipal user = getCurrentUser();
-        return user != null && user.getRoles().contains(role);
+        if (user == null || user.getRole() == null) {
+            return false;
+        }
+        role = user.getRole();
+        return role.equals(role) || role.equals("ROLE_" + role);
     }
 }

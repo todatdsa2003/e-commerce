@@ -2,7 +2,6 @@ package com.ecom.product_service.security;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,16 +19,16 @@ import lombok.NoArgsConstructor;
 public class UserPrincipal implements UserDetails {
 
     private Long id;
-    private String username;
     private String email;
-    private List<String> roles;
+    private String fullName;
+    private String phoneNumber;
+    private String role;  // Already has ROLE_ prefix from token
+    private Boolean isActive;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                .collect(Collectors.toList());
+        // role already has ROLE_ prefix (e.g., "ROLE_ADMIN")
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     @Override
@@ -39,7 +38,8 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username;
+        // Use email as username if fullName is not available
+        return fullName != null ? fullName : email;
     }
 
     @Override
@@ -59,6 +59,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isActive != null ? isActive : true;
     }
 }

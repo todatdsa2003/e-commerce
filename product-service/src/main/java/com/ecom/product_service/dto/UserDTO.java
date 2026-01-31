@@ -16,7 +16,7 @@ public class UserDTO {
     private String email;
     private String fullName;
     private String phoneNumber;
-    private String roleName;
+    private String role;
     private Boolean isActive;
     private LocalDateTime createdAt;
 }
