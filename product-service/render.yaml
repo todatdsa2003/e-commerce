@@ -29,7 +29,7 @@ services:
       
       # Server Config
       - key: SERVER_PORT
-        value: 8080
+        value: 8082
       
       # Production URL (update after deployment)
       - key: PRODUCTION_URL
