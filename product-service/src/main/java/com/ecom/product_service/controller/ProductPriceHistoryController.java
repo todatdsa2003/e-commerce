@@ -77,7 +77,7 @@ public class ProductPriceHistoryController {
     })
     @SecurityRequirement(name = "bearer-jwt")
     @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
-    @PostMapping("/price-history")
+    @PostMapping("/products/price-history")
     public ResponseEntity<ProductPriceHistoryResponse> createPriceHistory(
             @Valid @RequestBody ProductPriceHistoryRequest request) {
 
@@ -116,7 +116,7 @@ public class ProductPriceHistoryController {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved price history"),
         @ApiResponse(responseCode = "404", description = "Variant not found")
     })
-    @GetMapping("/variants/{variantId}/price-history")
+    @GetMapping("/products/variants/{variantId}/price-history")
     public ResponseEntity<List<ProductPriceHistoryResponse>> getVariantPriceHistory(
             @Parameter(description = "Unique identifier of the variant", example = "5", required = true) 
             @PathVariable Long variantId) {
