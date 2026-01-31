@@ -124,6 +124,13 @@
             <version>5.0.1</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Circuit Breaker with Resilience4j - Compatible with Spring Cloud 2023.0.x -->
+        <!-- Source: https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-circuitbreaker-resilience4j -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+            <version>3.1.3</version>
+        </dependency>
     </dependencies>
 
     <build>

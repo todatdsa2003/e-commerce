@@ -1,10 +1,8 @@
 package com.ecom.product_service.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,30 +13,48 @@ import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
 import com.ecom.product_service.service.ProductService;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "Product", description = "Public operations for viewing products")
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
+@Slf4j
 public class ProductController {
 
-    @Autowired
-    private UserClient userClient;
+    private final UserClient userClient;
     private final ProductService productService;
 
-    @GetMapping("/test-connection")
-    public ResponseEntity<UserDTO> testConnect(@RequestHeader("Authorization") String token) {
-        // Product Service nhận token từ Postman, rồi chuyển tiếp (forward) sang User
-        // Service
-        UserDTO user = userClient.getCurrentUser(token);
-
+    @GetMapping("/get-user-info")
+    @CircuitBreaker(name = "userService", fallbackMethod = "testConnectFallback")
+    public ResponseEntity<UserDTO> testConnect() {
+        UserDTO user = userClient.getCurrentUser();
         return ResponseEntity.ok(user);
+    }
+
+
+    private ResponseEntity<UserDTO> testConnectFallback(Throwable throwable) {
+        log.warn("Circuit Breaker activated for userService. Reason: {}", throwable.getMessage());
+        
+        // Return anonymous/default user instead of throwing 500 error
+        UserDTO anonymousUser = UserDTO.builder()
+                .id(-1L)
+                .fullName("System Maintenance")
+                .email("N/A")
+                .phoneNumber("N/A")
+                .roleName("ANONYMOUS")
+                .isActive(false)
+                .createdAt(null)
+                .build();
+        
+        return ResponseEntity.ok(anonymousUser);
     }
 
     @Operation(summary = "Get all products", description = "Retrieve a paginated list of products with optional filtering by search keyword, status, category, or brand. Public access.")

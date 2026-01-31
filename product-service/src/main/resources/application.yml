@@ -44,3 +44,37 @@ eureka:
     register-with-eureka: true
   instance:
     prefer-ip-address: true
+
+# Resilience4j Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        # Sliding window configuration - monitors last 10 calls
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        
+        # Failure threshold - opens circuit if 50% of calls fail
+        failure-rate-threshold: 50
+        
+        # Wait duration before attempting recovery - 10 seconds
+        wait-duration-in-open-state: 10s
+        
+        # Number of test calls allowed in half-open state
+        permitted-number-of-calls-in-half-open-state: 3
+        
+        # Minimum number of calls before calculating failure rate
+        minimum-number-of-calls: 5
+        
+        # Automatically transition from open to half-open
+        automatic-transition-from-open-to-half-open-enabled: true
+        
+    instances:
+      # Circuit breaker instance for user-service
+      userService:
+        base-config: default
+        # Record specific exceptions as failures
+        record-exceptions:
+          - feign.FeignException
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
