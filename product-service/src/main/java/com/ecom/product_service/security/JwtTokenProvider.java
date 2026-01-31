@@ -1,9 +1,7 @@
 package com.ecom.product_service.security;
 
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
-import java.util.List;
 
 import javax.crypto.SecretKey;
 
@@ -19,7 +17,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
-
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class JwtTokenProvider {
@@ -32,24 +30,19 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
 
-    private Key getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        
-        if (keyBytes.length < 32) {
-            throw new IllegalArgumentException(
-                "JWT secret key must be at least 256 bits (32 characters) for HS256 algorithm. " +
-                "Current length: " + keyBytes.length + " bytes. " +
-                "Please set a longer JWT_SECRET environment variable."
-            );
-        }
-        
-        return Keys.hmacShaKeyFor(keyBytes);
+    private SecretKey secretKey;
+
+    @PostConstruct
+    public void init() {
+        byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+        logger.info("JWT Secret Key initialized successfully");
     }
 
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith((SecretKey) getSigningKey())
+                    .verifyWith(secretKey)
                     .build()
                     .parseSignedClaims(token);
             return true;
@@ -69,22 +62,15 @@ public class JwtTokenProvider {
 
     public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
-                .verifyWith((SecretKey) getSigningKey())
+                .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
     }
 
-    public Long getUserIdFromToken(String token) {
+    public Long getIdFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        // User ID is stored in the "sub" claim as string, need to parse to Long
-        return Long.parseLong(claims.getSubject());
-    }
-
-
-    public String getUsernameFromToken(String token) {
-        Claims claims = getClaimsFromToken(token);
-        return claims.get("username", String.class);
+        return claims.get("id", Long.class);
     }
 
     public String getEmailFromToken(String token) {
@@ -92,28 +78,35 @@ public class JwtTokenProvider {
         return claims.get("email", String.class);
     }
 
-    @SuppressWarnings("unchecked")
-    public List<String> getRolesFromToken(String token) {
+    public String getFullNameFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        // Roles are stored as a list in the "roles" claim
-        return claims.get("roles", List.class);
+        return claims.get("fullName", String.class);
+    }
+
+    public String getPhoneNumberFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        return claims.get("phoneNumber", String.class);
+    }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        return claims.get("role", String.class);
+    }
+
+    public Boolean getIsActiveFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        return claims.get("isActive", Boolean.class);
     }
 
     public UserPrincipal getUserPrincipalFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        
+
         Long userId = Long.parseLong(claims.getSubject());
-        String username = claims.get("username", String.class);
-        String email = claims.get("email", String.class);
-        
-        @SuppressWarnings("unchecked")
-        List<String> roles = claims.get("roles", List.class);
-        
+        String role = claims.get("role", String.class);
+
         return UserPrincipal.builder()
                 .id(userId)
-                .username(username)
-                .email(email)
-                .roles(roles)
+                .role(role != null ? role : "ROLE_USER")
                 .build();
     }
 

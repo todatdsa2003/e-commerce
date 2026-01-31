@@ -39,6 +39,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Extract user information from token
                 UserPrincipal userPrincipal = jwtTokenProvider.getUserPrincipalFromToken(jwt);
 
+                // Log authentication details for debugging
+                logger.info("JWT Authentication - User ID: {}, Email: {}, Role: {}, Authorities: {}", 
+                    userPrincipal.getId(), 
+                    userPrincipal.getEmail(), 
+                    userPrincipal.getRole(),
+                    userPrincipal.getAuthorities());
+
                 // Create authentication object
                 UsernamePasswordAuthenticationToken authentication = 
                         new UsernamePasswordAuthenticationToken(
@@ -54,6 +61,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 
                 logger.debug("Set authentication for user: {}", userPrincipal.getUsername());
+            } else if (StringUtils.hasText(jwt)) {
+                logger.warn("Invalid JWT token received");
             }
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);

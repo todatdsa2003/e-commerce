@@ -49,7 +49,7 @@ public class ProductController {
                 .fullName("System Maintenance")
                 .email("N/A")
                 .phoneNumber("N/A")
-                .roleName("ANONYMOUS")
+                .role("ANONYMOUS")
                 .isActive(false)
                 .createdAt(null)
                 .build();
