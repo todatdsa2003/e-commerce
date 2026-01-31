@@ -108,19 +108,16 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Generate JWT token (24h)
-        String token = jwtTokenProvider.generateToken(user.getEmail());
+        String token = jwtTokenProvider.generateToken(user);
         log.info("JWT token generated for user: {}", user.getId());
         
         // Generate refresh token (long-lived, 7 days)
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
         log.info("Refresh token generated for user: {}", user.getId());
         
-        UserResponse userResponse = userMapper.toUserResponse(user);
         return AuthResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken.getToken())
-                .type("Bearer")
-                .user(userResponse)
                 .build();
     }
 
@@ -132,16 +129,12 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken validatedToken = refreshTokenService.validateRefreshToken(refreshToken);
         User user = validatedToken.getUser();
         
-        String newAccessToken = jwtTokenProvider.generateToken(user.getEmail());
+        String newAccessToken = jwtTokenProvider.generateToken(user);
         log.info("New access token generated for user: {}", user.getEmail());
-        
-        UserResponse userResponse = userMapper.toUserResponse(user);
         
         return AuthResponse.builder()
                 .token(newAccessToken)
                 .refreshToken(refreshToken)
-                .type("Bearer")
-                .user(userResponse)
                 .build();
     }
 
@@ -159,7 +152,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public String processOAuth2Login(String email, String name, String facebookId) {
+    public AuthResponse processOAuth2Login(String email, String name, String facebookId) {
         log.info("Processing OAuth2 login for email: {}", email);
         
         User user = userRepository.findByEmail(email).orElseGet(() -> {
@@ -194,10 +187,17 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("User account is inactive");
         }
         
-        // Generate JWT token
-        String token = jwtTokenProvider.generateToken(user.getEmail());
+        // Generate JWT token (24h)
+        String token = jwtTokenProvider.generateToken(user);
         log.info("JWT token generated for OAuth2 user: {}", user.getEmail());
         
-        return token;
+        // Generate refresh token (7 days)
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
+        log.info("Refresh token generated for OAuth2 user: {}", user.getEmail());
+
+        return AuthResponse.builder()
+                .token(token)
+                .refreshToken(refreshToken.getToken())
+                .build();
     }
 }

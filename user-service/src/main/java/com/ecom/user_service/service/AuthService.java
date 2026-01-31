@@ -15,5 +15,5 @@ public interface AuthService {
     
     void logout(String email);
     
-    String processOAuth2Login(String email, String name, String facebookId);
+    AuthResponse processOAuth2Login(String email, String name, String facebookId);
 }
