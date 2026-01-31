@@ -11,7 +11,7 @@ file:
   upload-dir: ${UPLOAD_DIR:uploads/products}
 jwt:
   secret: ${JWT_SECRET}
-  # Token expiration: 30 minutes (1800000ms) for security
+  # Token expiration: 30 minutes (1800000ms) for test security
   expiration: ${JWT_EXPIRATION:1800000}
 
 # SpringDoc OpenAPI (Swagger UI)
