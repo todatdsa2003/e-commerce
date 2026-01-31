@@ -8,6 +8,8 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.ecom.user_service.model.User;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -36,29 +38,43 @@ public class JwtTokenProvider {
         log.info("JWT Secret Key initialized successfully");
     }
 
-    public String generateToken(String email) {
+    public String generateToken(User user) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
 
+        String roleName = user.getRole().getName();
+        
         String token = Jwts.builder()
-                .subject(email)                          
+                .subject(String.valueOf(user.getId()))  // sub = userId
+                .claim("role", roleName)                 // role claim
                 .issuedAt(now)                           
                 .expiration(expiryDate)                 
                 .signWith(secretKey)                  
                 .compact();
 
-        log.debug("Generated JWT token for email: {}", email);
+        log.info("Generated minimal JWT token for user: {} (ID: {}) with role: {}", 
+                user.getEmail(), user.getId(), roleName);
         return token;
     }
 
-    public String getEmailFromToken(String token) {
+    public Long getUserIdFromToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return claims.getSubject();
+        return Long.parseLong(claims.getSubject());
+    }
+    
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.get("role", String.class);
     }
 
     public boolean validateToken(String token) {

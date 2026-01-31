@@ -41,20 +41,20 @@ public class JwtFilter extends OncePerRequestFilter {
             // Validate token and authenticate user
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
                 
-                //Get email from token
-                String email = jwtTokenProvider.getEmailFromToken(jwt);
-                log.debug("JWT token validated for email: {}", email);
+                //Get userId from token
+                Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
+                log.debug("JWT token validated for user ID: {}", userId);
 
                 // Load user from database
-                User user = userRepository.findByEmail(email)
+                User user = userRepository.findById(userId)
                         .orElseThrow(() -> {
-                            log.warn("User not found: {}", email);
+                            log.warn("User not found with ID: {}", userId);
                             return new RuntimeException("User not found");
                         });
 
                 // Check if user is active
                 if (!user.getIsActive()) {
-                    log.warn("User account is inactive: {}", email);
+                    log.warn("User account is inactive: {}", user.getEmail());
                     throw new RuntimeException("User account is inactive");
                 }
 
@@ -71,7 +71,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 // Set authentication in SecurityContext
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("User authenticated: {} with role: {}", email, user.getRole().getName());
+                log.debug("User authenticated: {} with role: {}", user.getEmail(), user.getRole().getName());
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);
