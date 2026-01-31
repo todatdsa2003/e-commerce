@@ -10,19 +10,33 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true # Tự động tạo route theo tên service
-          lower-case-service-id: true # Cho phép dùng tên thường (product-service)
+          enabled: true
+          lower-case-service-id: true
       routes:
-        # Route thủ công (Ưu tiên dùng cái này test trước)
         - id: product-service-route
-          uri: lb://PRODUCT-SERVICE  # Tên in hoa y hệt trên bảng Eureka
+          uri: lb://PRODUCT-SERVICE  
           predicates:
-            - Path=/api/v1/products/** # Link bắt đầu thế này thì chuyển
-          
+            - Path=/api/v1/products/** 
+
+        - id: product-service-route
+          uri: lb://PRODUCT-SERVICE  
+          predicates:
+            - Path=/api/v1/categories/**
+            
+        - id: product-service-route
+          uri: lb://PRODUCT-SERVICE  
+          predicates:
+            - Path=/api/v1/brands/** 
+
         - id: user-service-route
           uri: lb://USER-SERVICE
           predicates:
             - Path=/api/v1/users/**
+            
+        - id: auth-service-route
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/v1/auth/**
 
 eureka:
   client:
