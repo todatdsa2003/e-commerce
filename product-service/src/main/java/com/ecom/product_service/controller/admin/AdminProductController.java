@@ -19,18 +19,9 @@ import com.ecom.product_service.response.SuccessResponse;
 import com.ecom.product_service.service.MessageService;
 import com.ecom.product_service.service.ProductService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-
-@Tag(name = "Admin - Product Management", description = "Admin operations for managing products")
-@SecurityRequirement(name = "bearer-jwt")
 @RestController
 @RequestMapping("/api/v1/admin/products")
 @RequiredArgsConstructor
@@ -40,16 +31,7 @@ public class AdminProductController {
     private final ProductService productService;
     private final MessageService messageService;
 
-    @Operation(
-        summary = "[ADMIN] Create new product",
-        description = "Create a new product with complete details. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Product successfully created"),
-        @ApiResponse(responseCode = "400", description = "Invalid product data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role")
-    })
+    // Create new product (Admin only)
     @PostMapping
     public ResponseEntity<SuccessResponse<ProductResponse>> createProduct(@Valid @RequestBody ProductRequest request) {
         ProductResponse response = productService.createProduct(request);
@@ -61,23 +43,11 @@ public class AdminProductController {
                         .build());
     }
 
-    @Operation(
-        summary = "[ADMIN] Update product",
-        description = "Update an existing product's information. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Product successfully updated"),
-        @ApiResponse(responseCode = "400", description = "Invalid product data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
-    })
+    // Update existing product (Admin only)
     @PutMapping("/{id}")
     public ResponseEntity<SuccessResponse<ProductResponse>> updateProduct(
-            @Parameter(description = "Product ID", required = true) 
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request) {
-
         ProductResponse response = productService.updateProduct(id, request);
         String message = messageService.getMessage("success.product.updated");
         return ResponseEntity.ok(SuccessResponse.<ProductResponse>builder()
@@ -86,20 +56,9 @@ public class AdminProductController {
                 .build());
     }
 
-    @Operation(
-        summary = "[ADMIN] Delete product",
-        description = "Soft delete a product from the system. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Product successfully deleted"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
-    })
+    // Soft delete product (Admin only)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteProduct(
-            @Parameter(description = "Product ID", required = true) 
-            @PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         String message = messageService.getMessage("success.product.deleted");
         return ResponseEntity.ok(Map.of("message", message));

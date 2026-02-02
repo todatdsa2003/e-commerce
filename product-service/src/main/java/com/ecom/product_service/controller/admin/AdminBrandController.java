@@ -19,18 +19,9 @@ import com.ecom.product_service.response.SuccessResponse;
 import com.ecom.product_service.service.BrandService;
 import com.ecom.product_service.service.MessageService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-
-@Tag(name = "Admin - Brand Management", description = "Admin operations for managing brands")
-@SecurityRequirement(name = "bearer-jwt")
 @RestController
 @RequestMapping("/api/v1/admin/brands")
 @RequiredArgsConstructor
@@ -40,16 +31,7 @@ public class AdminBrandController {
     private final BrandService brandService;
     private final MessageService messageService;
 
-    @Operation(
-        summary = "[ADMIN] Create new brand",
-        description = "Create a new brand. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Brand successfully created"),
-        @ApiResponse(responseCode = "400", description = "Invalid brand data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role")
-    })
+    // Create new brand (Admin only)
     @PostMapping
     public ResponseEntity<SuccessResponse<BrandResponse>> createBrand(@Valid @RequestBody BrandRequest request) {
         BrandResponse response = brandService.createBrand(request);
@@ -61,23 +43,11 @@ public class AdminBrandController {
                         .build());
     }
 
-    @Operation(
-        summary = "[ADMIN] Update brand",
-        description = "Update an existing brand. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Brand successfully updated"),
-        @ApiResponse(responseCode = "400", description = "Invalid brand data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
-        @ApiResponse(responseCode = "404", description = "Brand not found")
-    })
+    // Update existing brand (Admin only)
     @PutMapping("/{id}")
     public ResponseEntity<SuccessResponse<BrandResponse>> updateBrand(
-            @Parameter(description = "Brand ID", required = true)
             @PathVariable Long id,
             @Valid @RequestBody BrandRequest request) {
-
         BrandResponse response = brandService.updateBrand(id, request);
         String message = messageService.getMessage("success.brand.updated");
         return ResponseEntity.ok(SuccessResponse.<BrandResponse>builder()
@@ -86,20 +56,9 @@ public class AdminBrandController {
                 .build());
     }
 
-    @Operation(
-        summary = "[ADMIN] Delete brand",
-        description = "Soft delete a brand. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Brand successfully deleted"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
-        @ApiResponse(responseCode = "404", description = "Brand not found")
-    })
+    // Soft delete brand (Admin only)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteBrand(
-            @Parameter(description = "Brand ID", required = true)
-            @PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);
         String message = messageService.getMessage("success.brand.deleted");
         return ResponseEntity.ok(Map.of("message", message));

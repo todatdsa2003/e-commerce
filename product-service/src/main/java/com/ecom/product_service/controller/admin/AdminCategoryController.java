@@ -19,17 +19,9 @@ import com.ecom.product_service.response.SuccessResponse;
 import com.ecom.product_service.service.CategoryService;
 import com.ecom.product_service.service.MessageService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "Admin - Category Management", description = "Admin operations for managing categories")
-@SecurityRequirement(name = "bearer-jwt")
 @RestController
 @RequestMapping("/api/v1/admin/categories")
 @RequiredArgsConstructor
@@ -39,16 +31,7 @@ public class AdminCategoryController {
     private final CategoryService categoryService;
     private final MessageService messageService;
 
-    @Operation(
-        summary = "[ADMIN] Create new category",
-        description = "Create a new category with optional parent category. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Category successfully created"),
-        @ApiResponse(responseCode = "400", description = "Invalid category data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role")
-    })
+    // Create new category (Admin only)
     @PostMapping
     public ResponseEntity<SuccessResponse<CategoryResponse>> createCategory(@Valid @RequestBody CategoryRequest request) {
         CategoryResponse response = categoryService.createCategory(request);
@@ -60,23 +43,11 @@ public class AdminCategoryController {
                         .build());
     }
 
-    @Operation(
-        summary = "[ADMIN] Update category",
-        description = "Update an existing category. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Category successfully updated"),
-        @ApiResponse(responseCode = "400", description = "Invalid category data"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
-        @ApiResponse(responseCode = "404", description = "Category not found")
-    })
+    // Update existing category (Admin only)
     @PutMapping("/{id}")
     public ResponseEntity<SuccessResponse<CategoryResponse>> updateCategory(
-            @Parameter(description = "Category ID", required = true)
             @PathVariable Long id,
             @Valid @RequestBody CategoryRequest request) {
-
         CategoryResponse response = categoryService.updateCategory(id, request);
         String message = messageService.getMessage("success.category.updated");
         return ResponseEntity.ok(SuccessResponse.<CategoryResponse>builder()
@@ -85,20 +56,9 @@ public class AdminCategoryController {
                 .build());
     }
 
-    @Operation(
-        summary = "[ADMIN] Delete category",
-        description = "Soft delete a category. Requires ADMIN role."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Category successfully deleted"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-        @ApiResponse(responseCode = "403", description = "Forbidden - Requires ADMIN role"),
-        @ApiResponse(responseCode = "404", description = "Category not found")
-    })
+    // Soft delete category (Admin only)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteCategory(
-            @Parameter(description = "Category ID", required = true)
-            @PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         String message = messageService.getMessage("success.category.deleted");
         return ResponseEntity.ok(Map.of("message", message));

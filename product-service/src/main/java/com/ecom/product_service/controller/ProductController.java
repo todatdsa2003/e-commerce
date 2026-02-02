@@ -14,15 +14,9 @@ import com.ecom.product_service.response.ProductResponse;
 import com.ecom.product_service.service.ProductService;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Tag(name = "Product", description = "Public operations for viewing products")
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
@@ -32,6 +26,7 @@ public class ProductController {
     private final UserClient userClient;
     private final ProductService productService;
 
+    // Test endpoint to verify UserService connectivity
     @GetMapping("/get-user-info")
     @CircuitBreaker(name = "userService", fallbackMethod = "testConnectFallback")
     public ResponseEntity<UserDTO> testConnect() {
@@ -39,11 +34,10 @@ public class ProductController {
         return ResponseEntity.ok(user);
     }
 
-
+    // Fallback method when UserService is unavailable
     private ResponseEntity<UserDTO> testConnectFallback(Throwable throwable) {
         log.warn("Circuit Breaker activated for userService. Reason: {}", throwable.getMessage());
-        
-        // Return anonymous/default user instead of throwing 500 error
+
         UserDTO anonymousUser = UserDTO.builder()
                 .id(-1L)
                 .fullName("System Maintenance")
@@ -53,37 +47,27 @@ public class ProductController {
                 .isActive(false)
                 .createdAt(null)
                 .build();
-        
+
         return ResponseEntity.ok(anonymousUser);
     }
 
-    @Operation(summary = "Get all products", description = "Retrieve a paginated list of products with optional filtering by search keyword, status, category, or brand. Public access.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved products"),
-            @ApiResponse(responseCode = "400", description = "Invalid request parameters")
-    })
+    // Get paginated products with filters
     @GetMapping
     public ResponseEntity<PageResponse<ProductResponse>> getAllProducts(
-            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Number of items per page", example = "10") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Search keyword to filter products by name or description", example = "iPhone") @RequestParam(required = false) String search,
-            @Parameter(description = "Filter by product status ID", example = "1") @RequestParam(required = false) Long statusId,
-            @Parameter(description = "Filter by category ID", example = "3") @RequestParam(required = false) Long categoryId,
-            @Parameter(description = "Filter by brand ID", example = "2") @RequestParam(required = false) Long brandId) {
-
-        PageResponse<ProductResponse> response = productService.getAllProducts(page, size, search, statusId, categoryId,
-                brandId);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long statusId,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long brandId) {
+        PageResponse<ProductResponse> response = productService.getAllProducts(
+                page, size, search, statusId, categoryId, brandId);
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get product by ID", description = "Retrieve detailed information about a specific product including its attributes and associated data. Public access.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved product"),
-            @ApiResponse(responseCode = "404", description = "Product not found")
-    })
+    // Get product details by ID
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(
-            @Parameter(description = "Unique identifier of the product", example = "1", required = true) @PathVariable Long id) {
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         ProductResponse response = productService.getProductById(id);
         return ResponseEntity.ok(response);
     }
