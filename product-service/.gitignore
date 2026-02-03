@@ -89,6 +89,10 @@ spring.log
 .DS_Store
 Thumbs.db
 
+# Claude Code temporary files
+tmpclaude-*
+.claude-cache/
+
 # ===================================
 # UPLOADS & USER GENERATED CONTENT
 # ===================================
@@ -98,6 +102,10 @@ uploads/
 !uploads/.gitkeep
 data/images/
 !data/images/.gitkeep
+
+# Test uploads directory
+**/target/test-uploads/
+test-uploads/
 
 # ===================================
 # DATABASE FILES
@@ -137,6 +145,16 @@ coverage/
 htmlcov/
 *.cover
 .pytest_cache/
+
+# Test output files
+**/target/surefire-reports/
+**/target/failsafe-reports/
+test-output/
+junit-report/
+
+# Performance test results (nếu generate report files)
+performance-results/
+benchmark-results/
 
 # ===================================
 # DOCKER & DEPLOYMENT
