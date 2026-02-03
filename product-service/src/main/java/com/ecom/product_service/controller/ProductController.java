@@ -7,13 +7,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ecom.product_service.client.UserClient;
-import com.ecom.product_service.dto.UserDTO;
+// ============================================
+// MICROSERVICES IMPORTS - COMMENTED FOR LOCAL TESTING
+// Uncomment these when deploying in microservices environment
+// ============================================
+//import com.ecom.product_service.client.UserClient;
+//import com.ecom.product_service.dto.UserDTO;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
 import com.ecom.product_service.service.ProductService;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+//import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,9 +27,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProductController {
 
-    private final UserClient userClient;
+    // ============================================
+    // MICROSERVICES FIELD - COMMENTED FOR LOCAL TESTING
+    // Uncomment this when deploying in microservices environment
+    // ============================================
+    //private final UserClient userClient;
     private final ProductService productService;
 
+    // ============================================
+    // MICROSERVICES TEST ENDPOINT - COMMENTED FOR LOCAL TESTING
+    // Uncomment this when deploying in microservices environment
+    // ============================================
+    /*
     // Test endpoint to verify UserService connectivity
     @GetMapping("/get-user-info")
     @CircuitBreaker(name = "userService", fallbackMethod = "testConnectFallback")
@@ -50,6 +63,7 @@ public class ProductController {
 
         return ResponseEntity.ok(anonymousUser);
     }
+    */
 
     // Get paginated products with filters
     @GetMapping
