@@ -16,11 +16,18 @@ import com.ecom.user_service.model.User;
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
-    Optional<RefreshToken> findByToken(String token);
+    @Query("SELECT rt FROM RefreshToken rt JOIN FETCH rt.user WHERE rt.token = :token")
+    Optional<RefreshToken> findByToken(@Param("token") String token);
 
     List<RefreshToken> findByUser(User user);
 
-    void deleteByUser(User user);
+    @Modifying
+    @Query("DELETE FROM RefreshToken rt WHERE rt.user = :user")
+    void deleteByUser(@Param("user") User user);
+
+    @Modifying
+    @Query("UPDATE RefreshToken rt SET rt.isRevoked = true WHERE rt.user = :user")
+    void revokeTokensByUser(@Param("user") User user);
 
     @Modifying
     @Query("DELETE FROM RefreshToken rt WHERE rt.expiryDate < :now")

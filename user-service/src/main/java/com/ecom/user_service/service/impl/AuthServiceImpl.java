@@ -42,19 +42,17 @@ public class AuthServiceImpl implements AuthService {
     public UserResponse register(RegisterRequest request) {
         log.info("Registering new user with email: {}", request.getEmail());
 
-        // Validate email not exists
         if (userRepository.existsByEmail(request.getEmail())) {
             log.error("Email already exists: {}", request.getEmail());
             throw new BadRequestException("Email already exists: " + request.getEmail());
         }
 
-        // Validate password match
         if (!request.getPassword().equals(request.getRetypePassword())) {
             log.error("Passwords do not match for email: {}", request.getEmail());
             throw new BadRequestException("Passwords do not match");
         }
-        
-        // Validate phone number limit
+
+        // Limit: max 2 accounts per phone number
         if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
             long phoneCount = userRepository.countByPhoneNumber(request.getPhoneNumber());
             if (phoneCount >= 2) {
@@ -84,7 +82,6 @@ public class AuthServiceImpl implements AuthService {
         return userMapper.toUserResponse(savedUser);
     }
 
-    //Login method
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
@@ -95,26 +92,22 @@ public class AuthServiceImpl implements AuthService {
                     return new UnauthorizedException("Invalid email or password");
                 });
 
-        // Validate password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             log.error("Invalid password for email: {}", request.getEmail());
             throw new UnauthorizedException("Invalid email or password");
         }
 
-        // Check  user is active
         if (!user.getIsActive()) {
             log.error("User account is inactive: {}", request.getEmail());
             throw new UnauthorizedException("User account is inactive");
         }
 
-        // Generate JWT token (24h)
         String token = jwtTokenProvider.generateToken(user);
         log.info("JWT token generated for user: {}", user.getId());
-        
-        // Generate refresh token (long-lived, 7 days)
+
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
         log.info("Refresh token generated for user: {}", user.getId());
-        
+
         return AuthResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken.getToken())
@@ -140,25 +133,20 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void logout(String email) {
-        log.info("Logging out user: {}", email);
-        
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-        
+    public void logout(User user) {
+        log.info("Logging out user: {}", user.getEmail());
         refreshTokenService.revokeUserTokens(user);
-        log.info("User logged out successfully: {}", email);
+        log.info("User logged out successfully: {}", user.getEmail());
     }
 
     @Override
     @Transactional
     public AuthResponse processOAuth2Login(String email, String name, String facebookId) {
         log.info("Processing OAuth2 login for email: {}", email);
-        
+
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             log.info("Creating new user from Facebook login: {}", email);
-            
-            // Get or create default role
+
             Role userRole = roleRepository.findByName(DEFAULT_ROLE)
                     .orElseGet(() -> {
                         log.info("Creating default role: {}", DEFAULT_ROLE);
@@ -168,30 +156,26 @@ public class AuthServiceImpl implements AuthService {
                                 .build();
                         return roleRepository.save(newRole);
                     });
-            
-            // Create new user from Facebook data
+
             User newUser = User.builder()
                     .email(email)
                     .fullName(name != null ? name : "Facebook User")
-                    .password(passwordEncoder.encode(facebookId)) // Encode Facebook ID as password
+                    .password(passwordEncoder.encode(facebookId))
                     .role(userRole)
                     .isActive(true)
                     .build();
-            
+
             return userRepository.save(newUser);
         });
-        
-        // Check if user is active
+
         if (!user.getIsActive()) {
             log.error("User account is inactive: {}", email);
             throw new UnauthorizedException("User account is inactive");
         }
-        
-        // Generate JWT token (24h)
+
         String token = jwtTokenProvider.generateToken(user);
         log.info("JWT token generated for OAuth2 user: {}", user.getEmail());
-        
-        // Generate refresh token (7 days)
+
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
         log.info("Refresh token generated for OAuth2 user: {}", user.getEmail());
 

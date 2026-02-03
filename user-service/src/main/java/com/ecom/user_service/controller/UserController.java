@@ -14,6 +14,9 @@ import com.ecom.user_service.dto.request.ChangePasswordRequest;
 import com.ecom.user_service.dto.request.UpdateProfileRequest;
 import com.ecom.user_service.dto.response.UserResponse;
 import com.ecom.user_service.exception.UnauthorizedException;
+import com.ecom.user_service.mapper.UserMapper;
+import com.ecom.user_service.model.User;
+import com.ecom.user_service.security.UserPrincipal;
 import com.ecom.user_service.service.UserService;
 
 import jakarta.validation.Valid;
@@ -25,60 +28,60 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
-    
+
     private final UserService userService;
-    
-    //Get current authenticated user profile
+    private final UserMapper userMapper;
+
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
-        String email = getAuthenticatedEmail(authentication);
-        log.info("User requesting profile: {}", email);
-        
-        UserResponse user = userService.getUserByEmail(email);
-        log.info("Profile retrieved successfully for user: {}", email);
-        
-        return ResponseEntity.ok(user);
+        // Get User from SecurityContext - no database query needed
+        User user = getUserFromAuthentication(authentication);
+        log.info("User requesting profile: {}", user.getEmail());
+
+        UserResponse response = userMapper.toUserResponse(user);
+        log.info("Profile retrieved successfully for user: {}", user.getEmail());
+
+        return ResponseEntity.ok(response);
     }
-    
-    //Update current user profile 
+
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @PutMapping("/me")
     public ResponseEntity<UserResponse> updateProfile(
             Authentication authentication,
             @Valid @RequestBody UpdateProfileRequest request) {
-        
-        String email = getAuthenticatedEmail(authentication);
-        log.info("User requesting profile update: {}", email);
-        
-        UserResponse updatedUser = userService.updateProfile(email, request);
-        log.info("Profile updated successfully for user: {}", email);
-        
+
+        User user = getUserFromAuthentication(authentication);
+        log.info("User requesting profile update: {}", user.getEmail());
+
+        UserResponse updatedUser = userService.updateProfile(user.getEmail(), request);
+        log.info("Profile updated successfully for user: {}", user.getEmail());
+
         return ResponseEntity.ok(updatedUser);
     }
-    
-    //Change current user password
+
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @PatchMapping("/me/password")
     public ResponseEntity<Void> changePassword(
             Authentication authentication,
             @Valid @RequestBody ChangePasswordRequest request) {
-        
-        String email = getAuthenticatedEmail(authentication);
-        log.info("User requesting password change: {}", email);
-        
-        userService.changePassword(email, request);
-        log.info("Password changed successfully for user: {}", email);
-        
+
+        User user = getUserFromAuthentication(authentication);
+        log.info("User requesting password change: {}", user.getEmail());
+
+        userService.changePassword(user.getEmail(), request);
+        log.info("Password changed successfully for user: {}", user.getEmail());
+
         return ResponseEntity.noContent().build();
     }
-    
-    //Extract and validate authenticated user email from Spring Security Authentication
-    private String getAuthenticatedEmail(Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
+
+    private User getUserFromAuthentication(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
             log.error("Authentication object is null or invalid");
             throw new UnauthorizedException("Authentication required");
         }
-        return authentication.getName();
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        return userPrincipal.getUser();
     }
 }

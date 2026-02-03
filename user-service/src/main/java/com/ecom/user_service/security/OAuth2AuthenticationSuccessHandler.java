@@ -25,7 +25,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final AuthService authService;
 
-    @Value("${app.oauth2.redirect-uri:http://localhost:5173/oauth2/callback}")
+    @Value("${app.oauth2.redirect-uri}")
     private String frontendRedirectUri;
 
     @Override
@@ -53,9 +53,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private ResponseCookie createAccessTokenCookie(String accessToken) {
         return ResponseCookie.from("accessToken", accessToken)
-                .httpOnly(true)             // Cannot be accessed from JavaScript (XSS protection)
-                .secure(true)               // Only sent over HTTPS (production)
-                .path("/")                  // Cookie available for all paths
+                .httpOnly(true)             // XSS protection
+                .secure(true)               // HTTPS only
+                .path("/")
                 .maxAge(24 * 60 * 60)       // 24 hours
                 .sameSite("Strict")         // CSRF protection
                 .build();
@@ -63,9 +63,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private ResponseCookie createRefreshTokenCookie(String refreshToken) {
         return ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)             // Cannot be accessed from JavaScript (XSS protection)
-                .secure(true)               // Only sent over HTTPS (production)
-                .path("/")                  // Cookie available for all paths
+                .httpOnly(true)             // XSS protection
+                .secure(true)               // HTTPS only
+                .path("/")
                 .maxAge(7 * 24 * 60 * 60)   // 7 days
                 .sameSite("Strict")         // CSRF protection
                 .build();
