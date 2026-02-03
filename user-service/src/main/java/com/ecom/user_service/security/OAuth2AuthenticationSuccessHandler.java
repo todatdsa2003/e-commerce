@@ -2,6 +2,8 @@ package com.ecom.user_service.security;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -9,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import com.ecom.user_service.dto.response.AuthResponse;
 import com.ecom.user_service.service.AuthService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,28 +24,50 @@ import lombok.extern.slf4j.Slf4j;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final AuthService authService;
-    private final ObjectMapper objectMapper;
+
+    @Value("${app.oauth2.redirect-uri:http://localhost:5173/oauth2/callback}")
+    private String frontendRedirectUri;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        
+
         // Get user info from OAuth2
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
         String facebookId = oAuth2User.getAttribute("id");
-        
+
         log.info("Facebook login successful for email: {}", email);
-        
-        // Process OAuth2 login (create or get user) - now returns AuthResponse with both tokens
+
         AuthResponse authResponse = authService.processOAuth2Login(email, name, facebookId);
-        
-        // Return full AuthResponse as JSON (includes access token + refresh token)
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(objectMapper.writeValueAsString(authResponse));
-        
-        log.info("Facebook login response sent with access token and refresh token");
+        ResponseCookie accessTokenCookie = createAccessTokenCookie(authResponse.getToken());
+        ResponseCookie refreshTokenCookie = createRefreshTokenCookie(authResponse.getRefreshToken());
+
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+        log.info("Redirecting to frontend with both tokens in httpOnly cookies: {}", frontendRedirectUri);
+
+        getRedirectStrategy().sendRedirect(request, response, frontendRedirectUri);
+    }
+
+    private ResponseCookie createAccessTokenCookie(String accessToken) {
+        return ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)             // Cannot be accessed from JavaScript (XSS protection)
+                .secure(true)               // Only sent over HTTPS (production)
+                .path("/")                  // Cookie available for all paths
+                .maxAge(24 * 60 * 60)       // 24 hours
+                .sameSite("Strict")         // CSRF protection
+                .build();
+    }
+
+    private ResponseCookie createRefreshTokenCookie(String refreshToken) {
+        return ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)             // Cannot be accessed from JavaScript (XSS protection)
+                .secure(true)               // Only sent over HTTPS (production)
+                .path("/")                  // Cookie available for all paths
+                .maxAge(7 * 24 * 60 * 60)   // 7 days
+                .sameSite("Strict")         // CSRF protection
+                .build();
     }
 }

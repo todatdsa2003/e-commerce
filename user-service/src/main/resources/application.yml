@@ -29,8 +29,8 @@ spring:
     baseline-on-migrate: true
     schemas: public
     validate-on-migrate: true
-  
-   # OAuth2 Configuration
+
+  # OAuth2 Configuration
   security:
     oauth2:
       client:
@@ -51,15 +51,30 @@ spring:
             user-info-uri: https://graph.facebook.com/v24.0/me?fields=id,name,email,picture
             user-name-attribute: id
 
+# Application OAuth2 Configuration
+app:
+  oauth2:
+    # URL frontend sẽ nhận sau khi login OAuth2 thành công (BFF Pattern)
+    redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:5173/oauth2/callback}
+
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}  # 1 day in milliseconds (24 hours)
-  
+  expiration: ${JWT_EXPIRATION}
+
 # Refresh Token Configuration
 refresh-token:
   expiration: ${REFRESH_TOKEN_EXPIRATION:604800000}
- 
+
+# Cookie Configuration
+cookie:
+  http-only: ${COOKIE_HTTP_ONLY:true}
+  secure: ${COOKIE_SECURE:true}
+  same-site: ${COOKIE_SAME_SITE:Strict}
+  path: ${COOKIE_PATH:/}
+  access-token-max-age: ${COOKIE_ACCESS_TOKEN_MAX_AGE:86400}
+  refresh-token-max-age: ${COOKIE_REFRESH_TOKEN_MAX_AGE:604800}
+
 
 logging:
   level:
@@ -69,12 +84,11 @@ logging:
     org.hibernate.orm.jdbc.bind: TRACE
     org.springframework.security: DEBUG
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/  # Địa chỉ của Discovery Server
-    fetch-registry: true # Lấy danh sách các service khác về
-    register-with-eureka: true # Đăng ký chính mình lên server
-  instance:
-    prefer-ip-address: true
-
+# eureka:
+#   client:
+#     service-url:
+#       defaultZone: http://localhost:8761/eureka/  # Địa chỉ của Discovery Server
+#     fetch-registry: true # Lấy danh sách các service khác về
+#     register-with-eureka: true # Đăng ký chính mình lên server
+#   instance:
+#     prefer-ip-address: true

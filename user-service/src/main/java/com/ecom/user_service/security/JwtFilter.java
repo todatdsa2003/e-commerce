@@ -16,6 +16,7 @@ import com.ecom.user_service.repository.UserRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,17 +31,17 @@ public class JwtFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, 
-                                    HttpServletResponse response, 
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        
+
         try {
-            //Extract JWT token from request header
+            // Extract JWT token from Cookie FIRST (BFF Pattern), fallback to Authorization header
             String jwt = getJwtFromRequest(request);
 
             // Validate token and authenticate user
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-                
+
                 //Get userId from token
                 Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
                 log.debug("JWT token validated for user ID: {}", userId);
@@ -59,14 +60,14 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
 
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().getName());
-                
-                UsernamePasswordAuthenticationToken authentication = 
+
+                UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                         user.getEmail(),                           // Principal (email)
                         null,                                      // Credentials (no password needed)
                         Collections.singletonList(authority)       // Authorities (role)
                     );
-                
+
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 // Set authentication in SecurityContext
@@ -82,12 +83,27 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
+        // 1. Try to get from Cookie first (BFF Pattern - httpOnly secure)
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (StringUtils.hasText(token)) {
+                        log.debug("JWT token extracted from httpOnly cookie");
+                        return token;
+                    }
+                }
+            }
+        }
+
+        // 2. Fallback to Authorization header (backward compatibility)
         String bearerToken = request.getHeader("Authorization");
-    
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            log.debug("JWT token extracted from Authorization header");
             return bearerToken.substring(7);
         }
-        
+
         return null;
     }
 }

@@ -45,8 +45,8 @@ public class JwtTokenProvider {
         String roleName = user.getRole().getName();
         
         String token = Jwts.builder()
-                .subject(String.valueOf(user.getId()))  // sub = userId
-                .claim("role", roleName)                 // role claim
+                .subject(String.valueOf(user.getId()))  
+                .claim("role", roleName)               
                 .issuedAt(now)                           
                 .expiration(expiryDate)                 
                 .signWith(secretKey)                  
