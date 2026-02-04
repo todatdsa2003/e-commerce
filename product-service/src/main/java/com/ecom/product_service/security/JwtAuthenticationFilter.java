@@ -13,74 +13,76 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, 
-                                    HttpServletResponse response, 
-                                    FilterChain filterChain) throws ServletException, IOException {
-        
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+
         try {
-            // Extract JWT token from request
+            // Extract JWT from cookie or Authorization header
             String jwt = getJwtFromRequest(request);
 
             // Validate token and set authentication
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-                // Extract user information from token
-                UserPrincipal userPrincipal = jwtTokenProvider.getUserPrincipalFromToken(jwt);
+                Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
+                String role = jwtTokenProvider.getRoleFromToken(jwt);
+                log.debug("JWT validated for user ID: {} with role: {}", userId, role);
 
-                // Log authentication details for debugging
-                logger.info("JWT Authentication - User ID: {}, Email: {}, Role: {}, Authorities: {}", 
-                    userPrincipal.getId(), 
-                    userPrincipal.getEmail(), 
-                    userPrincipal.getRole(),
-                    userPrincipal.getAuthorities());
+                // Create UserPrincipal (no database query needed)
+                UserPrincipal userPrincipal = new UserPrincipal(userId, role);
 
-                // Create authentication object
-                UsernamePasswordAuthenticationToken authentication = 
-                        new UsernamePasswordAuthenticationToken(
-                                userPrincipal, 
-                                null, 
-                                userPrincipal.getAuthorities()
-                        );
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userPrincipal,
+                        null,
+                        userPrincipal.getAuthorities());
 
-                // Set additional details
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Set authentication in security context
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                
-                logger.debug("Set authentication for user: {}", userPrincipal.getUsername());
-            } else if (StringUtils.hasText(jwt)) {
-                logger.warn("Invalid JWT token received");
+                log.debug("User authenticated: {} with role: {}", userId, role);
             }
         } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+            log.error("Could not set user authentication in security context", ex);
         }
 
-        // Continue the filter chain
         filterChain.doFilter(request, response);
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
+        // Priority 1: Extract from httpOnly cookie (for browser)
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (StringUtils.hasText(token)) {
+                        log.debug("JWT token extracted from httpOnly cookie");
+                        return token;
+                    }
+                }
+            }
+        }
+
+        // Priority 2: Extract from Authorization header (for microservices)
         String bearerToken = request.getHeader("Authorization");
-        
-        // Check if the Authorization header contains the token
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            // Remove "Bearer " prefix and return the token
+            log.debug("JWT token extracted from Authorization header");
             return bearerToken.substring(7);
         }
-        
+
         return null;
     }
 }

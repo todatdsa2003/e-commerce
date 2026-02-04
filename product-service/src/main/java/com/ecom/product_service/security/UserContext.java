@@ -5,57 +5,37 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public class UserContext {
 
-    public static UserPrincipal getCurrentUser() {
+    public static Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        
         if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
-            return (UserPrincipal) authentication.getPrincipal();
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            return userPrincipal.getUserId();
         }
-
+        
         return null;
     }
 
-    public static Long getCurrentUserId() {
-        UserPrincipal user = getCurrentUser();
-        return user != null ? user.getId() : null;
+    public static String getCurrentUserRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            return userPrincipal.getRole();
+        }
+        
+        return null;
     }
 
     public static String getCurrentUsername() {
-        UserPrincipal user = getCurrentUser();
-        return user != null ? user.getUsername() : null;
+        Long userId = getCurrentUserId();
+        return userId != null ? "user_" + userId : "anonymous";
     }
 
-    public static String getCurrentUserEmail() {
-        UserPrincipal user = getCurrentUser();
-        return user != null ? user.getEmail() : null;
-    }
-
-    public static String getCurrentUserFullName() {
-        UserPrincipal user = getCurrentUser();
-        return user != null ? user.getFullName() : null;
-    }
-
-    public static String getCurrentUserPhoneNumber() {
-        UserPrincipal user = getCurrentUser();
-        return user != null ? user.getPhoneNumber() : null;
-    }
-
-    public static String getCurrentUserRole() {
-        UserPrincipal user = getCurrentUser();
-        return user != null ? user.getRole() : null;
-    }
-
-    public static Boolean isCurrentUserActive() {
-        UserPrincipal user = getCurrentUser();
-        return user != null ? user.getIsActive() : null;
-    }
-
-    public static boolean hasRole(String role) {
-        UserPrincipal user = getCurrentUser();
-        if (user == null || user.getRole() == null) {
-            return false;
-        }
-        role = user.getRole();
-        return role.equals(role) || role.equals("ROLE_" + role);
+    public static boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && 
+               authentication.isAuthenticated() && 
+               authentication.getPrincipal() instanceof UserPrincipal;
     }
 }

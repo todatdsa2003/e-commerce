@@ -1,34 +1,26 @@
 package com.ecom.product_service.security;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+
+@Getter
+@RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-    private Long id;
-    private String email;
-    private String fullName;
-    private String phoneNumber;
-    private String role;  // Already has ROLE_ prefix from token
-    private Boolean isActive;
+    private final Long userId;
+    private final String role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // role already has ROLE_ prefix (e.g., "ROLE_ADMIN")
-        return List.of(new SimpleGrantedAuthority(role));
+        return Collections.singletonList(new SimpleGrantedAuthority(role));
     }
 
     @Override
@@ -38,8 +30,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public String getUsername() {
-        // Use email as username if fullName is not available
-        return fullName != null ? fullName : email;
+        return String.valueOf(userId);
     }
 
     @Override
@@ -59,6 +50,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return isActive != null ? isActive : true;
+        return true;
     }
 }
