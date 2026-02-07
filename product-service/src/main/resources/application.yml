@@ -9,72 +9,49 @@ server:
 
 file:
   upload-dir: ${UPLOAD_DIR:uploads/products}
+
 jwt:
   secret: ${JWT_SECRET}
-  # Token expiration: 30 minutes (1800000ms) for test security
+  # 30 minutes for test environment
   expiration: ${JWT_EXPIRATION:1800000}
-
-# SpringDoc OpenAPI (Swagger UI)
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-    try-it-out-enabled: true
-    operations-sorter: method
-    tags-sorter: alpha
-    display-request-duration: true
-    disable-swagger-default-url: true
-  show-actuator: false
-  default-produces-media-type: application/json
-  default-consumes-media-type: application/json
-  override-with-generic-response: false
 
 gemini:
   api:
     url: https://generativelanguage.googleapis.com/v1beta/models
   model: gemini-2.5-flash
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    prefer-ip-address: true
+# ============================================
+# MICROSERVICES CONFIG - COMMENTED FOR LOCAL TESTING
+# Uncomment these when deploying in microservices environment
+# ============================================
 
-# Resilience4j Circuit Breaker Configuration
-resilience4j:
-  circuitbreaker:
-    configs:
-      default:
-        # Sliding window configuration - monitors last 10 calls
-        sliding-window-type: COUNT_BASED
-        sliding-window-size: 10
-        
-        # Failure threshold - opens circuit if 50% of calls fail
-        failure-rate-threshold: 50
-        
-        # Wait duration before attempting recovery - 10 seconds
-        wait-duration-in-open-state: 10s
-        
-        # Number of test calls allowed in half-open state
-        permitted-number-of-calls-in-half-open-state: 3
-        
-        # Minimum number of calls before calculating failure rate
-        minimum-number-of-calls: 5
-        
-        # Automatically transition from open to half-open
-        automatic-transition-from-open-to-half-open-enabled: true
-        
-    instances:
-      # Circuit breaker instance for user-service
-      userService:
-        base-config: default
-        # Record specific exceptions as failures
-        record-exceptions:
-          - feign.FeignException
-          - java.io.IOException
-          - java.util.concurrent.TimeoutException
+# Eureka Discovery Client Configuration
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka/
+#    fetch-registry: true
+#    register-with-eureka: true
+#  instance:
+#    prefer-ip-address: true
+
+# Circuit Breaker configuration
+#resilience4j:
+#  circuitbreaker:
+#    configs:
+#      default:
+#        sliding-window-type: COUNT_BASED
+#        sliding-window-size: 10
+#        failure-rate-threshold: 50
+#        wait-duration-in-open-state: 10s
+#        permitted-number-of-calls-in-half-open-state: 3
+#        minimum-number-of-calls: 5
+#        automatic-transition-from-open-to-half-open-enabled: true
+#    instances:
+#      userService:
+#        base-config: default
+#        record-exceptions:
+#          - feign.FeignException
+#          - java.io.IOException
+#          - java.util.concurrent.TimeoutException
+
