@@ -1,7 +1,6 @@
 package com.ecom.user_service.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -55,17 +54,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public RefreshToken validateRefreshToken(String token) {
         log.debug("Validating refresh token: {}", token);
 
-        // Find token
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
-        // Check if revoked
         if (refreshToken.getIsRevoked()) {
             log.warn("Attempt to use revoked refresh token for user: {}", refreshToken.getUser().getEmail());
             throw new UnauthorizedException("Refresh token has been revoked");
         }
 
-        // Check if expired
         if (refreshToken.isExpired()) {
             log.warn("Attempt to use expired refresh token for user: {}", refreshToken.getUser().getEmail());
             throw new UnauthorizedException("Refresh token has expired");
@@ -79,19 +75,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public void revokeUserTokens(User user) {
         log.info("Revoking refresh tokens for user: {}", user.getEmail());
 
-        List<RefreshToken> tokens = refreshTokenRepository.findByUser(user);
-        
-        if (tokens.isEmpty()) {
-            log.warn("No refresh tokens found for user: {}", user.getEmail());
-            return;
-        }
-        
-        tokens.forEach(token -> {
-            token.setIsRevoked(true);
-            refreshTokenRepository.save(token);
-        });
-        
-        log.info("Revoked {} refresh token(s) for user: {}", tokens.size(), user.getEmail());
+        refreshTokenRepository.revokeTokensByUser(user);
+
+        log.info("Successfully revoked all refresh tokens for user: {}", user.getEmail());
     }
 
     @Override
