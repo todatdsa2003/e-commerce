@@ -43,4 +43,7 @@ public class ProductRequest {
 
     @Valid
     private List<ProductAttributeRequest> attributes = new ArrayList<>();
+
+    @Valid
+    private BulkVariantRequest variants;
 }

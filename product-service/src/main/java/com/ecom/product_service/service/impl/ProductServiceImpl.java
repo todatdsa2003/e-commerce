@@ -31,10 +31,14 @@ import com.ecom.product_service.repository.ProductAttributeRepository;
 import com.ecom.product_service.repository.ProductPriceHistoryRepository;
 import com.ecom.product_service.repository.ProductRepository;
 import com.ecom.product_service.repository.ProductStatusRepository;
+import com.ecom.product_service.response.CreateProductResponse;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
+import com.ecom.product_service.response.ProductVariantOptionResponse;
+import com.ecom.product_service.response.ProductVariantResponse;
 import com.ecom.product_service.service.MessageService;
 import com.ecom.product_service.service.ProductService;
+import com.ecom.product_service.service.ProductVariantService;
 import com.ecom.product_service.util.SlugUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -50,6 +54,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductAttributeRepository productAttributeRepository;
     private final ProductMapper productMapper;
     private final MessageService messageService;
+    private final ProductVariantService productVariantService;
 
     @Override
     @Transactional(readOnly = true)
@@ -87,7 +92,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductResponse createProduct(ProductRequest request) {
+    public CreateProductResponse createProduct(ProductRequest request) {
         if (productRepository.existsByName(request.getName())) {
             throw new BadRequestException(
                 messageService.getMessage("error.product.name.exists")
@@ -140,7 +145,22 @@ public class ProductServiceImpl implements ProductService {
             savedProduct = productRepository.save(savedProduct);
         }
 
-        return productMapper.toProductResponse(savedProduct);
+        // Xu ly tao variants neu co
+        if (request.getVariants() != null) {
+            List<ProductVariantResponse> createdVariants =
+                    productVariantService.createVariantsBulk(savedProduct.getId(), request.getVariants());
+            List<ProductVariantOptionResponse> createdOptions =
+                    productVariantService.getVariantOptions(savedProduct.getId());
+            return CreateProductResponse.builder()
+                    .product(productMapper.toProductResponse(savedProduct))
+                    .variantOptions(createdOptions)
+                    .variants(createdVariants)
+                    .build();
+        }
+
+        return CreateProductResponse.builder()
+                .product(productMapper.toProductResponse(savedProduct))
+                .build();
     }
 
     @Override

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecom.product_service.dto.ProductRequest;
+import com.ecom.product_service.response.CreateProductResponse;
 import com.ecom.product_service.response.ProductResponse;
 import com.ecom.product_service.response.SuccessResponse;
 import com.ecom.product_service.service.MessageService;
@@ -33,11 +34,11 @@ public class AdminProductController {
 
     // Create new product (Admin only)
     @PostMapping
-    public ResponseEntity<SuccessResponse<ProductResponse>> createProduct(@Valid @RequestBody ProductRequest request) {
-        ProductResponse response = productService.createProduct(request);
+    public ResponseEntity<SuccessResponse<CreateProductResponse>> createProduct(@Valid @RequestBody ProductRequest request) {
+        CreateProductResponse response = productService.createProduct(request);
         String message = messageService.getMessage("success.product.created");
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(SuccessResponse.<ProductResponse>builder()
+                .body(SuccessResponse.<CreateProductResponse>builder()
                         .message(message)
                         .data(response)
                         .build());
