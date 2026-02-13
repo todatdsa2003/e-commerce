@@ -29,11 +29,13 @@ import com.ecom.product_service.response.ProductImageResponse;
 import com.ecom.product_service.service.ProductImageService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductImageServiceImpl implements ProductImageService {
-    
+
     private final ProductImageRepository productImageRepository;
     private final ProductRepository productRepository;
     private final ProductImageMapper productImageMapper;
@@ -45,8 +47,7 @@ public class ProductImageServiceImpl implements ProductImageService {
     private static final int MAX_IMAGES_PER_PRODUCT = 6;
     private static final int MAX_THUMBNAILS_PER_PRODUCT = 1;
     private static final long MAX_FILE_SIZE_MB = 15;
-    
-    // Allowed image MIME types
+
     private static final List<String> ALLOWED_IMAGE_TYPES = List.of(
         "image/jpeg",
         "image/jpg",
@@ -54,8 +55,7 @@ public class ProductImageServiceImpl implements ProductImageService {
         "image/gif",
         "image/webp"
     );
-    
-    // Allowed file extensions
+
     private static final List<String> ALLOWED_EXTENSIONS = List.of(
         ".jpg",
         ".jpeg",
@@ -68,24 +68,20 @@ public class ProductImageServiceImpl implements ProductImageService {
     @Transactional
     public ProductImageResponse addImage(Long productId, MultipartFile file, Boolean isThumbnail) {
         Locale locale = LocaleContextHolder.getLocale();
-        
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                    messageSource.getMessage("error.product.not-found", new Object[]{productId}, locale)));
+
+        Product product = findProductOrThrow(productId, locale);
 
         Long currentImageCount = productImageRepository.countByProductId(productId);
         if (currentImageCount >= MAX_IMAGES_PER_PRODUCT) {
             throw new BadRequestException(
-                messageSource.getMessage("error.product-image.max-images", 
-                    new Object[]{MAX_IMAGES_PER_PRODUCT}, locale));
+                messageSource.getMessage("error.product-image.max-images", new Object[]{MAX_IMAGES_PER_PRODUCT}, locale));
         }
 
-        if (isThumbnail != null && isThumbnail) {
+        if (Boolean.TRUE.equals(isThumbnail)) {
             Long currentThumbnailCount = productImageRepository.countThumbnailByProductId(productId);
             if (currentThumbnailCount >= MAX_THUMBNAILS_PER_PRODUCT) {
                 throw new BadRequestException(
-                    messageSource.getMessage("error.product-image.max-thumbnails", 
-                        new Object[]{MAX_THUMBNAILS_PER_PRODUCT}, locale));
+                    messageSource.getMessage("error.product-image.max-thumbnails", new Object[]{MAX_THUMBNAILS_PER_PRODUCT}, locale));
             }
         }
 
@@ -94,15 +90,8 @@ public class ProductImageServiceImpl implements ProductImageService {
                 messageSource.getMessage("error.product-image.file-empty", null, locale));
         }
 
-
         validateImageFormat(file, locale);
-
-        long maxSize = MAX_FILE_SIZE_MB * 1024 * 1024; 
-        if (file.getSize() > maxSize) {
-            throw new BadRequestException(
-                messageSource.getMessage("error.product-image.file-too-large", 
-                    new Object[]{MAX_FILE_SIZE_MB}, locale));
-        }
+        validateFileSize(file, locale);
 
         String imageUrl = saveFile(file);
         ProductImage productImage = new ProductImage();
@@ -110,19 +99,15 @@ public class ProductImageServiceImpl implements ProductImageService {
         productImage.setImageUrl(imageUrl);
         productImage.setIsThumbnail(isThumbnail != null ? isThumbnail : false);
 
-        ProductImage savedImage = productImageRepository.save(productImage);
-        
-        return productImageMapper.toProductImageResponse(savedImage);
+        return productImageMapper.toProductImageResponse(productImageRepository.save(productImage));
     }
 
     @Override
     @Transactional
-    public List<ProductImageResponse> addMultipleImages(Long productId, List<MultipartFile> files) {
+    public List<ProductImageResponse> addMultipleImages(Long productId, List<MultipartFile> files, Integer thumbnailIndex) {
         Locale locale = LocaleContextHolder.getLocale();
-        
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                    messageSource.getMessage("error.product.not-found", new Object[]{productId}, locale)));
+
+        Product product = findProductOrThrow(productId, locale);
 
         if (files == null || files.isEmpty()) {
             throw new BadRequestException(
@@ -130,46 +115,43 @@ public class ProductImageServiceImpl implements ProductImageService {
         }
 
         Long currentImageCount = productImageRepository.countByProductId(productId);
-        Long totalImagesAfterUpload = currentImageCount + files.size();
-        
-        if (totalImagesAfterUpload > MAX_IMAGES_PER_PRODUCT) {
+        if (currentImageCount + files.size() > MAX_IMAGES_PER_PRODUCT) {
             throw new BadRequestException(
-                messageSource.getMessage("error.product-image.max-images-detail", 
+                messageSource.getMessage("error.product-image.max-images-detail",
                     new Object[]{MAX_IMAGES_PER_PRODUCT, currentImageCount, files.size()}, locale));
+        }
+
+        if (thumbnailIndex != null) {
+            if (thumbnailIndex < 0 || thumbnailIndex >= files.size()) {
+                throw new BadRequestException(
+                    messageSource.getMessage("error.product-image.thumbnail-index-invalid",
+                        new Object[]{thumbnailIndex, files.size() - 1}, locale));
+            }
+            Long currentThumbnailCount = productImageRepository.countThumbnailByProductId(productId);
+            if (currentThumbnailCount >= MAX_THUMBNAILS_PER_PRODUCT) {
+                throw new BadRequestException(
+                    messageSource.getMessage("error.product-image.max-thumbnails", new Object[]{MAX_THUMBNAILS_PER_PRODUCT}, locale));
+            }
         }
 
         for (int i = 0; i < files.size(); i++) {
             MultipartFile file = files.get(i);
-            
             if (file.isEmpty()) {
                 throw new BadRequestException(
-                    messageSource.getMessage("error.product-image.file-index-empty", 
-                        new Object[]{i + 1}, locale));
+                    messageSource.getMessage("error.product-image.file-index-empty", new Object[]{i + 1}, locale));
             }
-
-            // Validate image format (MIME type and extension)
             validateImageFormat(file, i + 1, locale);
-            
-            long maxSize = MAX_FILE_SIZE_MB * 1024 * 1024;
-            if (file.getSize() > maxSize) {
-                throw new BadRequestException(
-                    messageSource.getMessage("error.product-image.file-index-too-large", 
-                        new Object[]{i + 1, MAX_FILE_SIZE_MB}, locale));
-            }
+            validateFileSize(file, i + 1, locale);
         }
 
         List<ProductImageResponse> responses = new ArrayList<>();
-        for (MultipartFile file : files) {
-            String imageUrl = saveFile(file);
-            
+        for (int i = 0; i < files.size(); i++) {
+            String imageUrl = saveFile(files.get(i));
             ProductImage productImage = new ProductImage();
             productImage.setProduct(product);
             productImage.setImageUrl(imageUrl);
-            productImage.setIsThumbnail(false);
-
-            ProductImage savedImage = productImageRepository.save(productImage);
-            ProductImageResponse response = productImageMapper.toProductImageResponse(savedImage);
-            responses.add(response);
+            productImage.setIsThumbnail(thumbnailIndex != null && thumbnailIndex == i);
+            responses.add(productImageMapper.toProductImageResponse(productImageRepository.save(productImage)));
         }
 
         return responses;
@@ -179,83 +161,126 @@ public class ProductImageServiceImpl implements ProductImageService {
     @Transactional(readOnly = true)
     public List<ProductImageResponse> getImagesByProductId(Long productId) {
         Locale locale = LocaleContextHolder.getLocale();
-        
+
         if (!productRepository.existsById(productId)) {
             throw new ResourceNotFoundException(
                 messageSource.getMessage("error.product.not-found", new Object[]{productId}, locale));
         }
 
-        List<ProductImage> images = productImageRepository.findByProductId(productId);
-        return images.stream()
-                .map(productImageMapper::toProductImageResponse)
-                .collect(Collectors.toList());
+        return productImageRepository.findByProductId(productId).stream()
+            .map(productImageMapper::toProductImageResponse)
+            .collect(Collectors.toList());
     }
 
-    /**
-     * Validate image format by checking MIME type and file extension
-     * @param file the file to validate
-     * @param locale the locale for error messages
-     * @throws BadRequestException if the file is not a valid image
-     */
+    @Override
+    @Transactional
+    public ProductImageResponse setThumbnail(Long productId, Long imageId) {
+        Locale locale = LocaleContextHolder.getLocale();
+
+        if (!productRepository.existsById(productId)) {
+            throw new ResourceNotFoundException(
+                messageSource.getMessage("error.product.not-found", new Object[]{productId}, locale));
+        }
+
+        ProductImage image = productImageRepository.findByIdAndProductId(imageId, productId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                messageSource.getMessage("error.product-image.not-found", new Object[]{imageId, productId}, locale)));
+
+        if (Boolean.TRUE.equals(image.getIsThumbnail())) {
+            return productImageMapper.toProductImageResponse(image);
+        }
+
+        productImageRepository.findThumbnailByProductId(productId).ifPresent(current -> {
+            current.setIsThumbnail(false);
+            productImageRepository.save(current);
+        });
+
+        image.setIsThumbnail(true);
+        return productImageMapper.toProductImageResponse(productImageRepository.save(image));
+    }
+
+    @Override
+    @Transactional
+    public void deleteImage(Long productId, Long imageId) {
+        Locale locale = LocaleContextHolder.getLocale();
+
+        if (!productRepository.existsById(productId)) {
+            throw new ResourceNotFoundException(
+                messageSource.getMessage("error.product.not-found", new Object[]{productId}, locale));
+        }
+
+        ProductImage image = productImageRepository.findByIdAndProductId(imageId, productId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                messageSource.getMessage("error.product-image.not-found", new Object[]{imageId, productId}, locale)));
+
+        deletePhysicalFile(image.getImageUrl());
+        productImageRepository.delete(image);
+    }
+
+    private Product findProductOrThrow(Long productId, Locale locale) {
+        return productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                messageSource.getMessage("error.product.not-found", new Object[]{productId}, locale)));
+    }
+
     private void validateImageFormat(MultipartFile file, Locale locale) {
         String contentType = file.getContentType();
         String originalFilename = file.getOriginalFilename();
-        
-        // Check MIME type
+
         if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
             throw new BadRequestException(
                 messageSource.getMessage("error.product-image.file-invalid-format", null, locale));
         }
-        
-        // Check file extension
-        if (originalFilename != null && originalFilename.contains(".")) {
-            String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
-            if (!ALLOWED_EXTENSIONS.contains(extension)) {
-                throw new BadRequestException(
-                    messageSource.getMessage("error.product-image.file-invalid-format", null, locale));
-            }
-        } else {
+
+        if (originalFilename == null || !originalFilename.contains(".")) {
+            throw new BadRequestException(
+                messageSource.getMessage("error.product-image.file-invalid-format", null, locale));
+        }
+
+        String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
             throw new BadRequestException(
                 messageSource.getMessage("error.product-image.file-invalid-format", null, locale));
         }
     }
-    
-    /**
-     * Validate image format for indexed file (used in batch upload)
-     * @param file the file to validate
-     * @param index the file index (1-based)
-     * @param locale the locale for error messages
-     * @throws BadRequestException if the file is not a valid image
-     */
+
     private void validateImageFormat(MultipartFile file, int index, Locale locale) {
         String contentType = file.getContentType();
         String originalFilename = file.getOriginalFilename();
-        
-        // Check MIME type
+
         if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
             throw new BadRequestException(
-                messageSource.getMessage("error.product-image.file-index-invalid-format", 
-                    new Object[]{index}, locale));
+                messageSource.getMessage("error.product-image.file-index-invalid-format", new Object[]{index}, locale));
         }
-        
-        // Check file extension
-        if (originalFilename != null && originalFilename.contains(".")) {
-            String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
-            if (!ALLOWED_EXTENSIONS.contains(extension)) {
-                throw new BadRequestException(
-                    messageSource.getMessage("error.product-image.file-index-invalid-format", 
-                        new Object[]{index}, locale));
-            }
-        } else {
+
+        if (originalFilename == null || !originalFilename.contains(".")) {
             throw new BadRequestException(
-                messageSource.getMessage("error.product-image.file-index-invalid-format", 
-                    new Object[]{index}, locale));
+                messageSource.getMessage("error.product-image.file-index-invalid-format", new Object[]{index}, locale));
+        }
+
+        String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new BadRequestException(
+                messageSource.getMessage("error.product-image.file-index-invalid-format", new Object[]{index}, locale));
+        }
+    }
+
+    private void validateFileSize(MultipartFile file, Locale locale) {
+        if (file.getSize() > MAX_FILE_SIZE_MB * 1024 * 1024) {
+            throw new BadRequestException(
+                messageSource.getMessage("error.product-image.file-too-large", new Object[]{MAX_FILE_SIZE_MB}, locale));
+        }
+    }
+
+    private void validateFileSize(MultipartFile file, int index, Locale locale) {
+        if (file.getSize() > MAX_FILE_SIZE_MB * 1024 * 1024) {
+            throw new BadRequestException(
+                messageSource.getMessage("error.product-image.file-index-too-large", new Object[]{index, MAX_FILE_SIZE_MB}, locale));
         }
     }
 
     private String saveFile(MultipartFile file) {
         Locale locale = LocaleContextHolder.getLocale();
-        
         try {
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
@@ -263,18 +288,24 @@ public class ProductImageServiceImpl implements ProductImageService {
             }
 
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null && originalFilename.contains(".") 
-                    ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
-                    : "";
+            String extension = (originalFilename != null && originalFilename.contains("."))
+                ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                : "";
             String filename = UUID.randomUUID().toString() + extension;
-            Path filePath = uploadPath.resolve(filename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
             return "/uploads/products/" + filename;
-
         } catch (IOException e) {
             throw new BadRequestException(
-                messageSource.getMessage("error.product-image.save-failed", 
-                    new Object[]{e.getMessage()}, locale));
+                messageSource.getMessage("error.product-image.save-failed", new Object[]{e.getMessage()}, locale));
+        }
+    }
+
+    private void deletePhysicalFile(String imageUrl) {
+        try {
+            String filename = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+            Files.deleteIfExists(Paths.get(uploadDir).resolve(filename));
+        } catch (IOException e) {
+            log.warn("Could not delete physical image file: {}", imageUrl, e);
         }
     }
 }

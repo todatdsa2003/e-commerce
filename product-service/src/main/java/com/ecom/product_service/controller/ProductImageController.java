@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,11 +31,10 @@ public class ProductImageController {
     // Get all images for a product
     @GetMapping
     public ResponseEntity<List<ProductImageResponse>> getImages(@PathVariable Long productId) {
-        List<ProductImageResponse> images = productImageService.getImagesByProductId(productId);
-        return ResponseEntity.ok(images);
+        return ResponseEntity.ok(productImageService.getImagesByProductId(productId));
     }
 
-    // Upload single image (Admin only)
+    // Upload single image — supports isThumbnail flag (Admin only)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ProductImageResponse> addImage(
@@ -41,18 +42,38 @@ public class ProductImageController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "isThumbnail", defaultValue = "false") Boolean isThumbnail) {
         FileValidator.validateImageFile(file);
-        ProductImageResponse response = productImageService.addImage(productId, file, isThumbnail);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(productImageService.addImage(productId, file, isThumbnail));
     }
 
-    // Upload multiple images (Admin only)
+    // Upload multiple images — optional thumbnailIndex (0-based) to mark one as thumbnail (Admin only)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/multiple")
     public ResponseEntity<List<ProductImageResponse>> addMultipleImages(
             @PathVariable Long productId,
-            @RequestParam("files") List<MultipartFile> files) {
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam(value = "thumbnailIndex", required = false) Integer thumbnailIndex) {
         files.forEach(FileValidator::validateImageFile);
-        List<ProductImageResponse> responses = productImageService.addMultipleImages(productId, files);
-        return ResponseEntity.status(HttpStatus.CREATED).body(responses);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(productImageService.addMultipleImages(productId, files, thumbnailIndex));
+    }
+
+    // Set an existing image as thumbnail — replaces the current thumbnail (Admin only)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{imageId}/thumbnail")
+    public ResponseEntity<ProductImageResponse> setThumbnail(
+            @PathVariable Long productId,
+            @PathVariable Long imageId) {
+        return ResponseEntity.ok(productImageService.setThumbnail(productId, imageId));
+    }
+
+    // Delete a single image and its physical file (Admin only)
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{imageId}")
+    public ResponseEntity<Void> deleteImage(
+            @PathVariable Long productId,
+            @PathVariable Long imageId) {
+        productImageService.deleteImage(productId, imageId);
+        return ResponseEntity.noContent().build();
     }
 }
