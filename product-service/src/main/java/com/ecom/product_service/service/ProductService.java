@@ -7,9 +7,9 @@ import com.ecom.product_service.response.ProductResponse;
 
 public interface ProductService {
 
-    PageResponse<ProductResponse> getAllProducts(int page, int size, String search, Long statusId, Long categoryId, Long brandId);
+    PageResponse<ProductResponse> getAllProducts(int page, int size, String search, Long statusId, Long categoryId, Long brandId, boolean includeDeleted);
 
-    ProductResponse getProductById(Long id);
+    ProductResponse getProductById(Long id, boolean includeDeleted);
 
     CreateProductResponse createProduct(ProductRequest request);
 

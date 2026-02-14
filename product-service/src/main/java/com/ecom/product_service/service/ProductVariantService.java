@@ -17,11 +17,11 @@ public interface ProductVariantService {
     void deleteVariantOptions(Long productId);
     ProductVariantResponse createVariant(Long productId, ProductVariantRequest request);
     List<ProductVariantResponse> createVariantsBulk(Long productId, BulkVariantRequest request);
-    List<ProductVariantResponse> getVariants(Long productId, Boolean activeOnly);
+    List<ProductVariantResponse> getVariants(Long productId, Boolean activeOnly, boolean includeDeleted);
     ProductVariantResponse getVariantById(Long variantId);
     ProductVariantResponse getDefaultVariant(Long productId);
     ProductVariantResponse updateVariant(Long variantId, ProductVariantRequest request);
     void deleteVariant(Long variantId);
     ProductVariantResponse updateStock(Long variantId, Integer newStock);
-    ProductWithVariantsResponse getProductWithVariants(Long productId);
+    ProductWithVariantsResponse getProductWithVariants(Long productId, boolean includeDeleted);
 }

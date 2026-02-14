@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 
 import com.ecom.product_service.model.Product;
 import com.ecom.product_service.model.ProductAttribute;
+import com.ecom.product_service.model.ProductImage;
 import com.ecom.product_service.response.ProductAttributeResponse;
 import com.ecom.product_service.response.ProductResponse;
 
@@ -17,7 +18,16 @@ public interface ProductMapper {
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "brand.id", target = "brandId")
     @Mapping(source = "brand.name", target = "brandName")
+    @Mapping(target = "thumbnailUrl", expression = "java(getThumbnailUrl(product))")
     ProductResponse toProductResponse(Product product);
-    
+
     ProductAttributeResponse toProductAttributeResponse(ProductAttribute attribute);
+
+    default String getThumbnailUrl(Product product) {
+        return product.getImages().stream()
+            .filter(img -> Boolean.TRUE.equals(img.getIsThumbnail()))
+            .map(ProductImage::getImageUrl)
+            .findFirst()
+            .orElse(null);
+    }
 }

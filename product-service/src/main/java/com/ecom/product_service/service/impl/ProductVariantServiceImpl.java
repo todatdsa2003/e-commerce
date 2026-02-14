@@ -200,13 +200,15 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductVariantResponse> getVariants(Long productId, Boolean activeOnly) {
-        log.info("Fetching variants for productId: {}, activeOnly: {}", productId, activeOnly);
+    public List<ProductVariantResponse> getVariants(Long productId, Boolean activeOnly, boolean includeDeleted) {
+        log.info("Fetching variants for productId: {}, activeOnly: {}, includeDeleted: {}", productId, activeOnly, includeDeleted);
 
         findProductOrThrow(productId);
 
         List<ProductVariant> variants;
-        if (Boolean.TRUE.equals(activeOnly)) {
+        if (includeDeleted) {
+            variants = variantRepository.findByProductIdOrderByDisplayOrder(productId);
+        } else if (Boolean.TRUE.equals(activeOnly)) {
             variants = variantRepository.findByProductIdAndIsActiveTrueAndDeletedAtIsNullOrderByDisplayOrder(productId);
         } else {
             variants = variantRepository.findByProductIdAndDeletedAtIsNullOrderByDisplayOrder(productId);
@@ -357,14 +359,16 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductWithVariantsResponse getProductWithVariants(Long productId) {
-        log.info("Fetching complete product with variants for productId: {}", productId);
+    public ProductWithVariantsResponse getProductWithVariants(Long productId, boolean includeDeleted) {
+        log.info("Fetching complete product with variants for productId: {}, includeDeleted: {}", productId, includeDeleted);
 
         Product product = findProductOrThrow(productId);
 
         List<ProductVariantOption> options = variantOptionRepository.findByProductIdOrderByDisplayOrder(productId);
 
-        List<ProductVariant> variants = variantRepository.findByProductIdAndDeletedAtIsNullOrderByDisplayOrder(productId);
+        List<ProductVariant> variants = includeDeleted
+                ? variantRepository.findByProductIdOrderByDisplayOrder(productId)
+                : variantRepository.findByProductIdAndDeletedAtIsNullOrderByDisplayOrder(productId);
 
         ProductVariant defaultVariant = variantRepository.findByProductIdAndIsDefaultTrueAndDeletedAtIsNull(productId)
                 .orElse(null);

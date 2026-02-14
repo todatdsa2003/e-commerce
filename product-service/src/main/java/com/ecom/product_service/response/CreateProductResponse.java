@@ -15,6 +15,8 @@ public class CreateProductResponse {
 
     private ProductResponse product;
 
+    private List<ProductImageResponse> images;
+
     private List<ProductVariantOptionResponse> variantOptions;
 
     private List<ProductVariantResponse> variants;

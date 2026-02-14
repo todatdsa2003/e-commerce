@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -101,9 +102,11 @@ public class ProductVariantController {
     // Get all variants for a product
     @GetMapping("/products/{productId}/variants")
     public ResponseEntity<List<ProductVariantResponse>> getVariants(
+            Authentication authentication,
             @PathVariable Long productId,
             @RequestParam(defaultValue = "false") Boolean activeOnly) {
-        List<ProductVariantResponse> responses = variantService.getVariants(productId, activeOnly);
+        boolean isAdmin = hasAdminRole(authentication);
+        List<ProductVariantResponse> responses = variantService.getVariants(productId, activeOnly, isAdmin);
         return ResponseEntity.ok(responses);
     }
 
@@ -160,8 +163,17 @@ public class ProductVariantController {
 
     // Get product with all variants
     @GetMapping("/products/{productId}/variants/detail")
-    public ResponseEntity<ProductWithVariantsResponse> getProductWithVariants(@PathVariable Long productId) {
-        ProductWithVariantsResponse response = variantService.getProductWithVariants(productId);
+    public ResponseEntity<ProductWithVariantsResponse> getProductWithVariants(
+            Authentication authentication,
+            @PathVariable Long productId) {
+        boolean isAdmin = hasAdminRole(authentication);
+        ProductWithVariantsResponse response = variantService.getProductWithVariants(productId, isAdmin);
         return ResponseEntity.ok(response);
+    }
+
+    private boolean hasAdminRole(Authentication authentication) {
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 }

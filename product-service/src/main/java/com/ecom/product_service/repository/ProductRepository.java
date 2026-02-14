@@ -26,12 +26,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                         "LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')))")
         Page<Product> findAllWithSearch(@Param("search") String search, Pageable pageable);
 
-        // Prevents N+1 query problem when mapping to ProductResponse
+        // Prevents N+1 for ManyToOne relations (status, category, brand)
+        // attributes and images use @BatchSize(25) on the entity — 1 batch query per page
         @EntityGraph(attributePaths = {
                         "status",
                         "category",
-                        "brand",
-                        "attributes"
+                        "brand"
         })
         @Query("SELECT DISTINCT p FROM Product p " +
                         "LEFT JOIN p.status s " +
@@ -43,11 +43,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                         "AND (:statusId IS NULL OR s.id = :statusId) " +
                         "AND (:categoryId IS NULL OR c.id = :categoryId) " +
                         "AND (:brandId IS NULL OR b.id = :brandId) " +
-                        "AND p.isDeleted = false")
+                        "AND (:includeDeleted = true OR p.isDeleted = false)")
         Page<Product> findAllWithFilters(@Param("search") String search,
                         @Param("statusId") Long statusId,
                         @Param("categoryId") Long categoryId,
                         @Param("brandId") Long brandId,
+                        @Param("includeDeleted") boolean includeDeleted,
                         Pageable pageable);
 
         // Fetch product with all details for ProductResponse mapping                

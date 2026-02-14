@@ -16,6 +16,9 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
        List<ProductVariant> findByProductIdAndDeletedAtIsNullOrderByDisplayOrder(Long productId);
 
+       // For admin: includes soft-deleted variants
+       List<ProductVariant> findByProductIdOrderByDisplayOrder(Long productId);
+
        List<ProductVariant> findByProductIdAndIsActiveTrueAndDeletedAtIsNullOrderByDisplayOrder(Long productId);
 
        Optional<ProductVariant> findByProductIdAndIsDefaultTrueAndDeletedAtIsNull(Long productId);

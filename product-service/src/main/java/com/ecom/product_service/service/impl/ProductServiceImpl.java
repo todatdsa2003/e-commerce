@@ -59,10 +59,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<ProductResponse> getAllProducts(int page, int size, String search,
-            Long statusId, Long categoryId, Long brandId) {
+            Long statusId, Long categoryId, Long brandId, boolean includeDeleted) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Product> productPage = productRepository.findAllWithFilters(search, statusId, categoryId, brandId,
-                pageable);
+                includeDeleted, pageable);
 
         List<ProductResponse> productresponse = productPage.getContent().stream()
                 .map(productMapper::toProductResponse)
@@ -80,9 +80,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(Long id) {
+    public ProductResponse getProductById(Long id, boolean includeDeleted) {
         Product product = productRepository.findByIdWithDetails(id);
-        if (product == null) {
+        if (product == null || (!includeDeleted && Boolean.TRUE.equals(product.getIsDeleted()))) {
             throw new ResourceNotFoundException(
                 messageService.getMessage("error.product.not-found", new Object[]{id})
             );
@@ -103,6 +103,13 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                     messageService.getMessage("error.product-status.not-found", new Object[]{request.getStatusId()})
                 ));
+
+        
+        if ("OUT_OF_STOCK".equals(status.getCode())) {
+            throw new BadRequestException(
+                messageService.getMessage("error.product-status.not-allowed-on-create", new Object[]{status.getLabel()})
+            );
+        }
 
         Product product = new Product();
         product.setName(request.getName());
@@ -153,6 +160,7 @@ public class ProductServiceImpl implements ProductService {
                     productVariantService.getVariantOptions(savedProduct.getId());
             return CreateProductResponse.builder()
                     .product(productMapper.toProductResponse(savedProduct))
+                    .images(List.of())
                     .variantOptions(createdOptions)
                     .variants(createdVariants)
                     .build();
@@ -160,6 +168,7 @@ public class ProductServiceImpl implements ProductService {
 
         return CreateProductResponse.builder()
                 .product(productMapper.toProductResponse(savedProduct))
+                .images(List.of())
                 .build();
     }
 
