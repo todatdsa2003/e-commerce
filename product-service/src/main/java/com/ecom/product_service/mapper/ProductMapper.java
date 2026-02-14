@@ -1,8 +1,11 @@
 package com.ecom.product_service.mapper;
 
+import java.util.ArrayList;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import com.ecom.product_service.dto.ProductListDTO;
 import com.ecom.product_service.model.Product;
 import com.ecom.product_service.model.ProductAttribute;
 import com.ecom.product_service.model.ProductImage;
@@ -20,6 +23,10 @@ public interface ProductMapper {
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(target = "thumbnailUrl", expression = "java(getThumbnailUrl(product))")
     ProductResponse toProductResponse(Product product);
+
+    // For list view: all scalar fields map by name, attributes unused
+    @Mapping(target = "attributes", expression = "java(new java.util.ArrayList<>())")
+    ProductResponse toProductResponse(ProductListDTO dto);
 
     ProductAttributeResponse toProductAttributeResponse(ProductAttribute attribute);
 

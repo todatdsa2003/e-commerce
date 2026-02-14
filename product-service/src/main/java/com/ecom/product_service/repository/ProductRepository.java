@@ -14,89 +14,85 @@ import com.ecom.product_service.model.Product;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-        @Query("SELECT COUNT(p) > 0 FROM Product p WHERE LOWER(p.name) = LOWER(:name)")
-        boolean existsByName(@Param("name") String name);
+    @Query("SELECT COUNT(p) > 0 FROM Product p WHERE LOWER(p.name) = LOWER(:name)")
+    boolean existsByName(@Param("name") String name);
 
-        @Query("SELECT p FROM Product p " +
-                        "LEFT JOIN FETCH p.status " +
-                        "LEFT JOIN FETCH p.category " +
-                        "LEFT JOIN FETCH p.brand " +
-                        "WHERE (:search IS NULL OR :search = '') OR " +
-                        "(LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-                        "LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')))")
-        Page<Product> findAllWithSearch(@Param("search") String search, Pageable pageable);
+    @Query("SELECT p FROM Product p " +
+            "LEFT JOIN FETCH p.status " +
+            "LEFT JOIN FETCH p.category " +
+            "LEFT JOIN FETCH p.brand " +
+            "WHERE (:search IS NULL OR :search = '') OR " +
+            "(LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Product> findAllWithSearch(@Param("search") String search, Pageable pageable);
 
-        // Prevents N+1 for ManyToOne relations (status, category, brand)
-        // attributes and images use @BatchSize(25) on the entity — 1 batch query per page
-        @EntityGraph(attributePaths = {
-                        "status",
-                        "category",
-                        "brand"
-        })
-        @Query("SELECT DISTINCT p FROM Product p " +
-                        "LEFT JOIN p.status s " +
-                        "LEFT JOIN p.category c " +
-                        "LEFT JOIN p.brand b " +
-                        "WHERE (:search IS NULL OR :search = '' OR " +
-                        "LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-                        "LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-                        "AND (:statusId IS NULL OR s.id = :statusId) " +
-                        "AND (:categoryId IS NULL OR c.id = :categoryId) " +
-                        "AND (:brandId IS NULL OR b.id = :brandId) " +
-                        "AND (:includeDeleted = true OR p.isDeleted = false)")
-        Page<Product> findAllWithFilters(@Param("search") String search,
-                        @Param("statusId") Long statusId,
-                        @Param("categoryId") Long categoryId,
-                        @Param("brandId") Long brandId,
-                        @Param("includeDeleted") boolean includeDeleted,
-                        Pageable pageable);
+    @EntityGraph(attributePaths = {
+            "status",
+            "category",
+            "brand"
+    })
+    @Query("SELECT DISTINCT p FROM Product p " +
+            "LEFT JOIN p.status s " +
+            "LEFT JOIN p.category c " +
+            "LEFT JOIN p.brand b " +
+            "WHERE (:search IS NULL OR :search = '' OR " +
+            "LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+            "AND (:statusId IS NULL OR s.id = :statusId) " +
+            "AND (:categoryId IS NULL OR c.id = :categoryId) " +
+            "AND (:brandId IS NULL OR b.id = :brandId) " +
+            "AND (:includeDeleted = true OR p.isDeleted = false)")
+    Page<Product> findAllWithFilters(@Param("search") String search,
+            @Param("statusId") Long statusId,
+            @Param("categoryId") Long categoryId,
+            @Param("brandId") Long brandId,
+            @Param("includeDeleted") boolean includeDeleted,
+            Pageable pageable);
 
-        // Fetch product with all details for ProductResponse mapping                
-        @Query("SELECT p FROM Product p " +
-                        "LEFT JOIN FETCH p.status " +
-                        "LEFT JOIN FETCH p.category " +
-                        "LEFT JOIN FETCH p.brand " +
-                        "WHERE p.id = :id")
-        Product findByIdWithDetails(@Param("id") Long id);
+    // Fetch product with all details for ProductResponse mapping
+    @Query("SELECT p FROM Product p " +
+            "LEFT JOIN FETCH p.status " +
+            "LEFT JOIN FETCH p.category " +
+            "LEFT JOIN FETCH p.brand " +
+            "WHERE p.id = :id")
+    Product findByIdWithDetails(@Param("id") Long id);
 
-        // DTO Projection - Best Performance for List View
-        // Constructor projection: Fetch chỉ columns cần thiết, không load entities
-        // No N+1 problem vì không có lazy collections
-        // Single query với minimal data transfer
-        @Query("""
-                        SELECT new com.ecom.product_service.dto.ProductListDTO(
-                            p.id,
-                            p.name,
-                            p.slug,
-                            p.description,
-                            p.price,
-                            p.availability,
-                            s.id,
-                            s.label,
-                            c.id,
-                            c.name,
-                            b.id,
-                            b.name,
-                            p.isDeleted,
-                            p.createdAt,
-                            p.updatedAt
-                        )
-                        FROM Product p
-                        LEFT JOIN p.status s
-                        LEFT JOIN p.category c
-                        LEFT JOIN p.brand b
-                        WHERE (:search IS NULL OR :search = '' OR
-                               LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                               LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')))
-                        AND (:statusId IS NULL OR s.id = :statusId)
-                        AND (:categoryId IS NULL OR c.id = :categoryId)
-                        AND (:brandId IS NULL OR b.id = :brandId)
-                        AND p.isDeleted = false
-                        """)
-        Page<ProductListDTO> findAllProductsOptimized(
-                        @Param("search") String search,
-                        @Param("statusId") Long statusId,
-                        @Param("categoryId") Long categoryId,
-                        @Param("brandId") Long brandId,
-                        Pageable pageable);
+    @Query("""
+            SELECT new com.ecom.product_service.dto.ProductListDTO(
+                p.id,
+                p.name,
+                p.slug,
+                p.description,
+                p.price,
+                p.availability,
+                s.id,
+                s.label,
+                c.id,
+                c.name,
+                b.id,
+                b.name,
+                p.isDeleted,
+                p.createdAt,
+                p.updatedAt,
+                (SELECT pi.imageUrl FROM ProductImage pi WHERE pi.product.id = p.id AND pi.isThumbnail = true)
+            )
+            FROM Product p
+            LEFT JOIN p.status s
+            LEFT JOIN p.category c
+            LEFT JOIN p.brand b
+            WHERE (:search IS NULL OR :search = '' OR
+                   LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')))
+            AND (:statusId IS NULL OR s.id = :statusId)
+            AND (:categoryId IS NULL OR c.id = :categoryId)
+            AND (:brandId IS NULL OR b.id = :brandId)
+            AND (:includeDeleted = true OR p.isDeleted = false)
+            """)
+    Page<ProductListDTO> findAllProductsOptimized(
+            @Param("search") String search,
+            @Param("statusId") Long statusId,
+            @Param("categoryId") Long categoryId,
+            @Param("brandId") Long brandId,
+            @Param("includeDeleted") boolean includeDeleted,
+            Pageable pageable);
 }

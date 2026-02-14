@@ -33,7 +33,9 @@ public class ProductListDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    //Constructor for JPQL projection
+    private String thumbnailUrl;
+
+    // Constructor for JPQL projection
     public ProductListDTO(
             Long id,
             String name,
@@ -49,7 +51,8 @@ public class ProductListDTO {
             String brandName,
             Boolean isDeleted,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+            LocalDateTime updatedAt,
+            String thumbnailUrl) {
         this.id = id;
         this.name = name;
         this.slug = slug;
@@ -65,5 +68,6 @@ public class ProductListDTO {
         this.isDeleted = isDeleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.thumbnailUrl = thumbnailUrl;
     }
 }

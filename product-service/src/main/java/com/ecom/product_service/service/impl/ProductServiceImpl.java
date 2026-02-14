@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ecom.product_service.dto.ProductAttributeRequest;
+import com.ecom.product_service.dto.ProductListDTO;
 import com.ecom.product_service.dto.ProductRequest;
 import com.ecom.product_service.exception.BadRequestException;
 import com.ecom.product_service.exception.ResourceNotFoundException;
@@ -61,8 +62,8 @@ public class ProductServiceImpl implements ProductService {
     public PageResponse<ProductResponse> getAllProducts(int page, int size, String search,
             Long statusId, Long categoryId, Long brandId, boolean includeDeleted) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Product> productPage = productRepository.findAllWithFilters(search, statusId, categoryId, brandId,
-                includeDeleted, pageable);
+        Page<ProductListDTO> productPage = productRepository.findAllProductsOptimized(
+                search, statusId, categoryId, brandId, includeDeleted, pageable);
 
         List<ProductResponse> productresponse = productPage.getContent().stream()
                 .map(productMapper::toProductResponse)
