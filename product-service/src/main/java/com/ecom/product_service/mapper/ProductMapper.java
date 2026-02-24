@@ -1,7 +1,5 @@
 package com.ecom.product_service.mapper;
 
-import java.util.ArrayList;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -12,7 +10,7 @@ import com.ecom.product_service.model.ProductImage;
 import com.ecom.product_service.response.ProductAttributeResponse;
 import com.ecom.product_service.response.ProductResponse;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {ProductImageMapper.class})
 public interface ProductMapper {
 
     @Mapping(source = "status.id", target = "statusId")
@@ -24,8 +22,8 @@ public interface ProductMapper {
     @Mapping(target = "thumbnailUrl", expression = "java(getThumbnailUrl(product))")
     ProductResponse toProductResponse(Product product);
 
-    // For list view: all scalar fields map by name, attributes unused
     @Mapping(target = "attributes", expression = "java(new java.util.ArrayList<>())")
+    @Mapping(target = "images", expression = "java(new java.util.ArrayList<>())")
     ProductResponse toProductResponse(ProductListDTO dto);
 
     ProductAttributeResponse toProductAttributeResponse(ProductAttribute attribute);

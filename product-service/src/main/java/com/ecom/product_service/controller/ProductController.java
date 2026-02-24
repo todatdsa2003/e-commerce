@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ecom.product_service.client.UserClient;
+import com.ecom.product_service.dto.UserDTO;
 import com.ecom.product_service.response.PageResponse;
 import com.ecom.product_service.response.ProductResponse;
 import com.ecom.product_service.service.ProductService;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,18 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProductController {
 
-    // ============================================
-    // MICROSERVICES FIELD - COMMENTED FOR LOCAL TESTING
-    // Uncomment this when deploying in microservices environment
-    // ============================================
-    //private final UserClient userClient;
+    private final UserClient userClient;
     private final ProductService productService;
 
-    // ============================================
-    // MICROSERVICES TEST ENDPOINT - COMMENTED FOR LOCAL TESTING
-    // Uncomment this when deploying in microservices environment
-    // ============================================
-    /*
     // Test endpoint to verify UserService connectivity
     @GetMapping("/get-user-info")
     @CircuitBreaker(name = "userService", fallbackMethod = "testConnectFallback")
@@ -57,7 +51,6 @@ public class ProductController {
 
         return ResponseEntity.ok(anonymousUser);
     }
-    */
 
     // Get paginated products with filters
     @GetMapping
@@ -86,7 +79,8 @@ public class ProductController {
     }
 
     private boolean hasAdminRole(Authentication authentication) {
-        if (authentication == null) return false;
+        if (authentication == null)
+            return false;
         return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }

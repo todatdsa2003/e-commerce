@@ -69,6 +69,53 @@ public class ProductVariantController {
         return ResponseEntity.noContent().build();
     }
 
+    // Add a single value to an existing option (Admin only)
+    // Allowed even when variants exist - only expands the set of valid values
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/products/{productId}/variants/options/{optionId}/values")
+    public ResponseEntity<SuccessResponse<ProductVariantOptionResponse>> addOptionValue(
+            @PathVariable Long productId,
+            @PathVariable Long optionId,
+            @RequestBody Map<String, String> body) {
+        String value = body.get("value");
+        ProductVariantOptionResponse response = variantService.addOptionValue(productId, optionId, value);
+        return ResponseEntity.ok(SuccessResponse.<ProductVariantOptionResponse>builder()
+                .message(messageService.getMessage("success.variant-option.value-added"))
+                .data(response)
+                .build());
+    }
+
+    // Remove a single value from an option (Admin only)
+    // Blocked if any active variant currently uses this value
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/products/{productId}/variants/options/{optionId}/values/{value}")
+    public ResponseEntity<SuccessResponse<ProductVariantOptionResponse>> removeOptionValue(
+            @PathVariable Long productId,
+            @PathVariable Long optionId,
+            @PathVariable String value) {
+        ProductVariantOptionResponse response = variantService.removeOptionValue(productId, optionId, value);
+        return ResponseEntity.ok(SuccessResponse.<ProductVariantOptionResponse>builder()
+                .message(messageService.getMessage("success.variant-option.value-removed"))
+                .data(response)
+                .build());
+    }
+
+    // Rename an option (Admin only)
+    // Automatically migrates the key in all variants' option_values JSON
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/products/{productId}/variants/options/{optionId}")
+    public ResponseEntity<SuccessResponse<ProductVariantOptionResponse>> updateOptionName(
+            @PathVariable Long productId,
+            @PathVariable Long optionId,
+            @RequestBody Map<String, String> body) {
+        String newName = body.get("optionName");
+        ProductVariantOptionResponse response = variantService.updateOptionName(productId, optionId, newName);
+        return ResponseEntity.ok(SuccessResponse.<ProductVariantOptionResponse>builder()
+                .message(messageService.getMessage("success.variant-option.updated"))
+                .data(response)
+                .build());
+    }
+
     // Create single variant (Admin only)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/products/{productId}/variants")

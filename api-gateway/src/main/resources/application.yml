@@ -27,11 +27,27 @@ spring:
           uri: lb://PRODUCT-SERVICE  
           predicates:
             - Path=/api/v1/categories/**
-            
+         
+        - id: product-service-route
+          uri: lb://PRODUCT-SERVICE  
+          predicates:
+            - Path=/api/v1/product-status/**
+
+        - id: product-service-route
+          uri: lb://PRODUCT-SERVICE  
+          predicates:
+            - Path=/api/v1/variants/**
+
         - id: product-service-route
           uri: lb://PRODUCT-SERVICE  
           predicates:
             - Path=/api/v1/brands/** 
+
+        - id: product-service-route
+          uri: lb://PRODUCT-SERVICE  
+          predicates:
+            - Path=/uploads/products/** 
+
 
         - id: user-service-route
           uri: lb://USER-SERVICE

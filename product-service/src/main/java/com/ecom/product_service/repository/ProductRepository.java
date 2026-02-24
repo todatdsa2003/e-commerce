@@ -49,7 +49,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("includeDeleted") boolean includeDeleted,
             Pageable pageable);
 
-    // Fetch product with all details for ProductResponse mapping
     @Query("SELECT p FROM Product p " +
             "LEFT JOIN FETCH p.status " +
             "LEFT JOIN FETCH p.category " +

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -63,4 +64,29 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
                      "AND v.stockQuantity <= v.lowStockThreshold " +
                      "ORDER BY v.stockQuantity ASC")
        List<ProductVariant> findLowStockVariants(@Param("productId") Long productId);
+
+       // Count ALL non-deleted variants (including inactive) - for totalVariants field
+       @Query("SELECT COUNT(v) FROM ProductVariant v WHERE v.product.id = :productId AND v.deletedAt IS NULL")
+       long countAllVariantsByProductId(@Param("productId") Long productId);
+
+       // Count how many variants use a specific option value (via JSONB query)
+       @Query(value = "SELECT COUNT(*) FROM product_variants " +
+                     "WHERE product_id = :productId " +
+                     "AND deleted_at IS NULL " +
+                     "AND option_values ->> :optionName = :optionValue",
+                     nativeQuery = true)
+       int countVariantsUsingOptionValue(@Param("productId") Long productId,
+                     @Param("optionName") String optionName,
+                     @Param("optionValue") String optionValue);
+
+       // Rename an option key in all variants' optionValuesJson for a product
+       @Modifying
+       @Query(value = "UPDATE product_variants " +
+                     "SET option_values = (option_values - :oldName) || " +
+                     "jsonb_build_object(:newName, option_values -> :oldName) " +
+                     "WHERE product_id = :productId AND deleted_at IS NULL",
+                     nativeQuery = true)
+       void renameOptionInVariants(@Param("productId") Long productId,
+                     @Param("oldName") String oldName,
+                     @Param("newName") String newName);
 }

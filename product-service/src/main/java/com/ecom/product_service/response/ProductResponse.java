@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ProductResponse {
-    
+
     private Long id;
     private String name;
     private String slug;
@@ -29,11 +29,15 @@ public class ProductResponse {
     private Long brandId;
     private String brandName;
     private Boolean isDeleted;
+
     private String thumbnailUrl;
 
     @Builder.Default
+    private List<ProductImageResponse> images = new ArrayList<>();
+
+    @Builder.Default
     private List<ProductAttributeResponse> attributes = new ArrayList<>();
-    
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

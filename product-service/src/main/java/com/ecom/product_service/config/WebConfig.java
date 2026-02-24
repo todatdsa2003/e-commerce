@@ -33,31 +33,6 @@ public class WebConfig implements WebMvcConfigurer {
         return mapper;
     }
 
-    // CORS is handled by API Gateway - DISABLED to prevent duplicate headers
-    // If you need to test Product Service directly (without Gateway), uncomment this method
-    /*
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins(
-                        "http://localhost:5173",
-                        "http://localhost:3000",
-                        "https://e-commerce-gwel.onrender.com")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders(
-                        "Authorization",
-                        "Content-Type",
-                        "Accept",
-                        "X-Requested-With",
-                        "Accept-Language")
-                .exposedHeaders(
-                        "Authorization",
-                        "Content-Disposition")
-                .allowCredentials(true)
-                .maxAge(3600);
-    }
-    */
-
     // Doc file messages tu resources folder
     @Bean
     public MessageSource messageSource() {

@@ -20,38 +20,34 @@ gemini:
     url: https://generativelanguage.googleapis.com/v1beta/models
   model: gemini-2.5-flash
 
-# ============================================
-# MICROSERVICES CONFIG - COMMENTED FOR LOCAL TESTING
-# Uncomment these when deploying in microservices environment
-# ============================================
 
 # Eureka Discovery Client Configuration
-#eureka:
-#  client:
-#    service-url:
-#      defaultZone: http://localhost:8761/eureka/
-#    fetch-registry: true
-#    register-with-eureka: true
-#  instance:
-#    prefer-ip-address: true
+eureka:
+ client:
+   service-url:
+     defaultZone: http://localhost:8761/eureka/
+   fetch-registry: true
+   register-with-eureka: true
+ instance:
+   prefer-ip-address: true
 
 # Circuit Breaker configuration
-#resilience4j:
-#  circuitbreaker:
-#    configs:
-#      default:
-#        sliding-window-type: COUNT_BASED
-#        sliding-window-size: 10
-#        failure-rate-threshold: 50
-#        wait-duration-in-open-state: 10s
-#        permitted-number-of-calls-in-half-open-state: 3
-#        minimum-number-of-calls: 5
-#        automatic-transition-from-open-to-half-open-enabled: true
-#    instances:
-#      userService:
-#        base-config: default
-#        record-exceptions:
-#          - feign.FeignException
-#          - java.io.IOException
-#          - java.util.concurrent.TimeoutException
+resilience4j:
+ circuitbreaker:
+   configs:
+     default:
+       sliding-window-type: COUNT_BASED
+       sliding-window-size: 10
+       failure-rate-threshold: 50
+       wait-duration-in-open-state: 10s
+       permitted-number-of-calls-in-half-open-state: 3
+       minimum-number-of-calls: 5
+       automatic-transition-from-open-to-half-open-enabled: true
+   instances:
+     userService:
+       base-config: default
+       record-exceptions:
+         - feign.FeignException
+         - java.io.IOException
+         - java.util.concurrent.TimeoutException
 
