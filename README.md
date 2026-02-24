@@ -1,324 +1,325 @@
-# Product Service
-A specialized backend service for managing products in an E-commerce platform with support for product variants, categories, brands, and comprehensive price history tracking.
+# e-commerce
+A backend system for an online shopping application built with **Microservices Architecture** using Spring Boot and Spring Cloud.
 
 ## Document Organization
 - [SYSTEM DESIGN DOCUMENT](#system-design-document)
   - [1. INTRODUCTION](#1-introduction)
     - [1.1 Purpose and Scope](#11-purpose-and-scope)
   - [2. SYSTEM ARCHITECTURE](#2-system-architecture)
-    - [2.1 DATABASE DESIGN](#22-database-design)
-    - [2.2 Folder Structure](#23-folder-structure)
-    - [2.3 Libraries](#24-libraries)
-    - [2.4 API Documentation](#25-api-documentation)
-    - [2.5 Development](#26-development)
-  - [3. How to run](#3-how-to-run)
+    - [2.1 High-level Design](#21-high-level-design)
+    - [2.2 Database Design](#22-database-design)
+    - [2.3 Folder Structure](#23-folder-structure)
+    - [2.4 Libraries](#24-libraries)
+    - [2.5 Services Details](#25-services-details)
+    - [2.6 Development](#26-development)
+  - [3. How to Run](#3-how-to-run)
   - [4. References](#4-references)
 
+---
+
 ## System Design Document
-Overview
-The System Design Document describes the system requirements, operating environment, system and subsystem architecture, files and database design, input formats, output layouts, API interfaces, detailed design, processing logic, and external interfaces.
+
+### Overview
+The System Design Document describes the system requirements, operating environment, system and subsystem architecture, database design, API design, security mechanisms, and inter-service communication patterns.
+
+---
 
 ### 1. INTRODUCTION
+
 #### 1.1 Purpose and Scope
-Product Service is a specialized backend component designed for managing products within an E-commerce ecosystem. Ideally structured to function as a Service-Oriented component, it currently operates as a standalone application.
+An e-commerce backend platform built as an MVP with a microservices architecture targeting the following core functionalities:
 
-At this stage, the system relies on the deployed Swagger UI as the primary interface for interaction, verification, and data management, pending the development of a dedicated client application. The service provides comprehensive product management capabilities to support business requirements:
+1. Customers can view all products and filter, sort, and search by criteria such as name, price, brand, and category.
+2. Admins manage products, categories, brands, product status, variants, attributes, and images via a back-office API.
+3. Products support multiple variants (SKUs), key-value attributes, and multiple images with thumbnail support.
+4. Customers can log in via **Facebook SSO** (OAuth2) — no manual registration required.
+5. Authentication is **stateless JWT**, stored in `httpOnly` Cookie for browsers and `Authorization: Bearer` header for service-to-service communication.
+6. Refresh Token mechanism with persistent storage and scheduled automatic cleanup.
+7. All API requests are routed through a single **API Gateway** to internal services discovered via **Eureka Service Registry**.
+8. AI-powered product features via **Gemini AI API**.
 
-    1. Product catalog management with support for filtering, sorting, and searching 
-    products based on different criteria such as name, price, brand, category, and status.
-    
-    2. All product prices are subject to change at any time and the service maintains 
-    a complete history of price changes for audit and reporting purposes.
-    
-    3. A product always displays the latest price when retrieved through the API.
-    
-    4. Products can have multiple variants (SKUs) with different combinations of options 
-    (e.g., size, color, storage capacity) each with independent pricing and stock levels.
-    
-    5. Support for hierarchical category structure allowing products to be organized 
-    in a tree-like taxonomy with parent-child relationships.
-    
-    6. Brand management to associate products with their respective manufacturers 
-    or brand names.
-    
-    7. Soft delete functionality to ensure data retention and recovery capability 
-    for categories, brands, and products.
-    
-    8. Multiple image support per product with display ordering capability.
-    
-    9. Flexible product attributes system using key-value pairs for product 
-    specifications and technical details.
+---
 
 ### 2. SYSTEM ARCHITECTURE
 
-#### 2.1 Database Design
-Product Database Diagram
+#### 2.1 High-level Design
 
-![Product Database Diagrams](data/images/database.png)
+![High Level Design](data/images/architecture.png)
 
-- products : Product master data with base information
-- product_variants : SKU-based variants with individual pricing and stock
-- product_variant_options : Variant option definitions (e.g., Color: Red, Size: Large)
-- categories : Hierarchical category structure with parent-child relationships
-- brands : Brand information with product count tracking
-- product_images : Multiple images per product with display ordering
-- product_attributes : Flexible key-value attributes for product specifications
-- product_price_history : Historical price changes for products and variants
-- product_status : Product status codes (Active, Inactive, Draft, etc.)
+**Service Communication:**
 
-**Entity Relationship Overview**
+| Flow | Description |
+|---|---|
+| Client / Admin → API Gateway | All HTTP requests enter through API Gateway (:8080) |
+| API Gateway → Services | Routes to `PRODUCT-SERVICE` or `USER-SERVICE` via `lb://` (Eureka load-balancer) |
+| Product Service → User Service | Internal call using **OpenFeign** with automatic JWT propagation via `FeignClientInterceptor`. Protected by **Resilience4j Circuit Breaker** |
+| All Services → Registry Service | Each service self-registers with Eureka on startup |
+| OAuth2 Flow | Client → Facebook SSO → callback to User Service → issue JWT → set `httpOnly` Cookie |
 
-The schema is centered on `products` and is designed with normalized 1:N relationships for integrity and maintainability:
+**Note:** API Gateway does **not** validate JWT — authentication and authorization are handled entirely at the service level.
 
-- **Classification & Hierarchy**
-  - `categories` uses a self-referencing Parent-Child relationship; each category can contain many products.
-  - `brands` and `product_status` relate to products via 1:N to support classification and lifecycle state.
+#### 2.2 Database Design
 
-- **Variant Architecture**
-  - `products` (1) -> (N) `product_variants` to represent multiple SKUs with independent stock and pricing.
-  - `product_variants` (1) -> (N) `product_variant_options` to define option combinations (e.g., size, color).
+**User Database Diagram**
 
-- **Product Extensions & Audit**
-  - `products` (1) -> (N) `product_images` and `product_attributes` for media and flexible specifications.
-  - `product_price_history` links to `products` and optionally `product_variants` to track all price changes over time.
+<!-- ảnh database: chụp ERD từ DBeaver hoặc pgAdmin rồi đặt ở data/images/user_db.png -->
 
-Key Database Features:
-- Soft Delete: is_deleted flag on categories, brands, and products for data retention
-- Price History: Automatic tracking of all price changes with timestamps
-- JSONB Storage: option_values stored as JSONB for flexible variant combinations
-- Constraints: Foreign keys, check constraints, and unique indexes for data integrity
-- Timestamps: created_at and updated_at on all major entities
+| Table | Description |
+|---|---|
+| `users` | Customer and admin account information |
+| `roles` | Role definitions (ADMIN, USER) |
+| `refresh_tokens` | Persistent refresh tokens with expiry timestamp |
 
-#### 2.2 Folder Structure
+**Product Database Diagram**
 
-For the service, the project follows a layered architecture:
-- Controller Layer: REST API endpoints
-- Service Layer: Business logic implementation
-- Repository Layer: Data access using Spring Data JPA
-- Model Layer: JPA entities representing database tables
-- DTO Layer: Data transfer objects for request/response
-- Mapper Layer: MapStruct mappers for entity-DTO conversion
-- Exception Layer: Global exception handling
+<!-- ảnh database: chụp ERD từ DBeaver hoặc pgAdmin rồi đặt ở data/images/product_db.png -->
 
-#### 2.3 Libraries
-- spring-boot-starter-web : Web API and RESTful services
-- spring-boot-starter-actuator : Monitoring and health management
-- spring-boot-starter-data-jpa : Spring Data JPA for database operations
-- spring-boot-starter-validation : Jakarta Bean Validation
-- spring-boot-starter-security : Authentication and authorization (JWT-based)
-- postgresql : PostgreSQL database driver
-- flyway-core : Database migration management
-- mapstruct : Object mapping code generator
-- lombok : Reduce boilerplate code
-- springdoc-openapi-starter-webmvc-ui : OpenAPI 3 / Swagger UI documentation
-- jjwt (api/impl/jackson) : JWT parsing and validation
-- spring-boot-starter-test : Testing components
-- spring-boot-devtools : Development environment support
+| Table | Description |
+|---|---|
+| `products` | Core product data — name, slug, price, description, soft-delete flag |
+| `product_images` | Product images with `is_thumbnail` flag |
+| `product_attributes` | Flexible key-value attributes per product (color, material, ...) |
+| `product_variants` | SKU-based variants with independent pricing and stock |
+| `product_variant_options` | Option values per variant (stored as JSONB) |
+| `product_price_history` | Historical price change tracking for products and variants |
+| `categories` | Hierarchical category tree with self-referencing parent-child |
+| `brands` | Brand information |
+| `product_statuses` | Product lifecycle statuses (Active, Inactive, Draft, Out of Stock) |
 
-#### 2.4 API Documentation
+**Key Database Design Decisions:**
+- **Soft Delete**: `is_deleted` flag on products, categories, and brands — data is never hard-deleted
+- **Price History**: All price changes are automatically tracked with timestamps
+- **JSONB**: `option_values` on `product_variant_options` for flexible combinations
+- **Flyway**: All schema changes managed via versioned migration scripts
 
-##### Interactive API Documentation
-The service provides interactive API documentation using Swagger UI. In the absence of a complete frontend application, this interface serves as the primary tool for testing, data entry, and exploring the API capabilities on the deployed environment.
+#### 2.3 Folder Structure
 
-**Production URL**: https://e-commerce-gwel.onrender.com/swagger-ui/index.html
-
-**Local Development URL**: http://localhost:8080/swagger-ui.html
-
-Authentication and Authorization
-The service uses stateless JWT authentication. Public endpoints are accessible without a token, while write/admin operations require a valid JWT in the `Authorization` header and an `ADMIN` role where enforced.
-
-Swagger UI Authorization
-Use the `Authorize` button and provide the token value as: `Bearer <JWT>`.
-
-![Swagger UI](data/images/swagger_ui.png)
-
-##### Main API Endpoints
-
-**Brand Management (Public)**
 ```
-GET    /api/v1/brands              - List all brands (paginated, searchable)
-GET    /api/v1/brands/{id}         - Get brand by ID
+e-commerce/
+├── discovery-server/       # Eureka Registry Service  (:8761)
+├── api-gateway/            # Spring Cloud Gateway     (:8080)
+├── user-service/           # Auth & User Management   (:8081)
+└── product-service/        # Product Management       (:8082)
 ```
 
-**Brand Management (Admin - Requires ADMIN role)**
+Each service follows a standard layered architecture:
 ```
-POST   /api/v1/admin/brands        - Create new brand
-PUT    /api/v1/admin/brands/{id}   - Update brand
-DELETE /api/v1/admin/brands/{id}   - Soft delete brand
-```
-
-**Category Management (Public)**
-```
-GET    /api/v1/categories          - List all categories (paginated, searchable)
-GET    /api/v1/categories/{id}     - Get category by ID
-```
-
-**Category Management (Admin - Requires ADMIN role)**
-```
-POST   /api/v1/admin/categories        - Create new category
-PUT    /api/v1/admin/categories/{id}   - Update category
-DELETE /api/v1/admin/categories/{id}   - Soft delete category
+src/main/java/com/ecom/{service}/
+├── controller/     # REST API endpoints
+├── service/        # Business logic (interface + impl pattern)
+├── repository/     # Spring Data JPA repositories
+├── model/          # JPA Entity classes
+├── dto/            # Request / Response DTOs
+├── mapper/         # MapStruct mappers  (product-service only)
+├── security/       # JWT filter, token provider, UserPrincipal
+├── config/         # Spring configuration beans
+├── exception/      # Custom exceptions + GlobalExceptionHandler
+└── client/         # OpenFeign clients  (product-service only)
 ```
 
-**Product Management (Public)**
-```
-GET    /api/v1/products            - List all products (paginated, searchable)
-GET    /api/v1/products/{id}       - Get product by ID
-```
+#### 2.4 Libraries
 
-**Product Management (Admin - Requires ADMIN role)**
-```
-POST   /api/v1/admin/products        - Create new product
-PUT    /api/v1/admin/products/{id}   - Update product
-DELETE /api/v1/admin/products/{id}   - Soft delete product
-```
+| Library | Purpose |
+|---|---|
+| `spring-boot-starter-web` / `webmvc` | REST API |
+| `spring-boot-starter-data-jpa` | ORM with Hibernate |
+| `spring-boot-starter-security` | Spring Security |
+| `spring-boot-starter-oauth2-client` | Facebook SSO (OAuth2) |
+| `spring-boot-starter-validation` | Bean Validation (Jakarta) |
+| `spring-boot-starter-aop` | Aspect Oriented Programming — audit logging |
+| `spring-boot-starter-actuator` | Health check and monitoring |
+| `spring-cloud-starter-netflix-eureka-server` | Service Registry (discovery-server) |
+| `spring-cloud-starter-netflix-eureka-client` | Service Discovery client (all services) |
+| `spring-cloud-gateway` | API Gateway — Reactive, non-blocking (Netty) |
+| `spring-cloud-starter-openfeign` | Declarative HTTP client for inter-service calls |
+| `spring-cloud-starter-circuitbreaker-resilience4j` | Circuit Breaker on Feign calls |
+| `flyway-database-postgresql` | Database schema versioned migration |
+| `postgresql` | PostgreSQL JDBC driver |
+| `io.jsonwebtoken (jjwt)` | JWT creation and validation |
+| `org.mapstruct` | Compile-time entity ↔ DTO mapping (zero reflection) |
+| `org.projectlombok` | Boilerplate reduction |
+| `dotenv-java` | Load env variables from `.env` file |
+| `h2` | In-memory database for unit testing |
+| `Gemini AI API` | AI-powered features in product-service |
 
-**Product Variant Management**
-```
-GET    /api/v1/products/{productId}/variants/options      - Get variant options (public)
-POST   /api/v1/products/{productId}/variants/options      - Create/update variant options (ADMIN)
-DELETE /api/v1/products/{productId}/variants/options      - Delete variant options (ADMIN)
-GET    /api/v1/products/{productId}/variants              - List product variants
-GET    /api/v1/products/{productId}/variants/{id}         - Get variant by ID
-POST   /api/v1/products/{productId}/variants              - Create new variant (ADMIN)
-PUT    /api/v1/products/{productId}/variants/{id}         - Update variant (ADMIN)
-DELETE /api/v1/products/{productId}/variants/{id}         - Delete variant (ADMIN)
-POST   /api/v1/products/{productId}/variants/bulk         - Bulk create variants (ADMIN)
-```
+#### 2.5 Services Details
 
-**Product Image Management**
-```
-GET    /api/v1/products/{productId}/images                - List product images
-GET    /api/v1/products/{productId}/images/{id}           - Get image by ID
-POST   /api/v1/products/{productId}/images                - Upload product image (ADMIN)
-POST   /api/v1/products/{productId}/images/multiple       - Upload multiple images (ADMIN)
-```
+##### 2.5.1 Registry Service (Discovery Server)
+- **Port:** 8761
+- Netflix Eureka Server — central service registry.
+- All services register on startup and discover each other through Eureka.
+- API Gateway resolves `lb://SERVICE-NAME` to actual instances via Eureka.
 
-**Price History**
-```
-GET    /api/v1/products/{productId}/price-history         - Get product price history
-GET    /api/v1/variants/{variantId}/price-history         - Get variant price history
-```
+##### 2.5.2 API Gateway
+- **Port:** 8080
+- Spring Cloud Gateway running on **Reactive stack (Netty)** — non-blocking I/O.
+- Pure routing — no business logic, no JWT validation.
+- Route table:
 
-#### 2.5 Development
-- JDK 21
-- Spring Boot 4.0.0
-- Spring Framework 6.x
-- PostgreSQL 16
-- Flyway 10.x
-- MapStruct 1.5.5.Final
-- Docker 24.x
-- Maven 3.9+
+| Path Pattern | Target Service |
+|---|---|
+| `/api/v1/products/**` | PRODUCT-SERVICE |
+| `/api/v1/admin/products/**` | PRODUCT-SERVICE |
+| `/api/v1/categories/**` | PRODUCT-SERVICE |
+| `/api/v1/brands/**` | PRODUCT-SERVICE |
+| `/api/v1/product-status/**` | PRODUCT-SERVICE |
+| `/api/v1/variants/**` | PRODUCT-SERVICE |
+| `/uploads/products/**` | PRODUCT-SERVICE |
+| `/api/v1/users/**` | USER-SERVICE |
+| `/api/v1/auth/**` | USER-SERVICE |
 
-### 3. How to run
+##### 2.5.3 User Service
+- **Port:** 8081
+- **Database:** PostgreSQL (`user_service_db`)
+- **Authentication:**
+  - Standard login (email + password) → issues JWT AccessToken + RefreshToken
+  - Facebook OAuth2 SSO → login without registration, maps Facebook profile to local user
+  - JWT stored in `httpOnly` Cookie (`accessToken`) — XSS-safe for browsers
+  - `Authorization: Bearer` header supported for API clients
+- **Token Management:**
+  - Refresh Token persisted in DB with configurable expiry
+  - `TokenCleanupScheduler` — scheduled job auto-purges expired tokens
+- **Authorization:** Role-based — `ROLE_USER`, `ROLE_ADMIN`
+- **Schema Migration:** Flyway
+- **Supported operations:** Register, Login, Logout, Refresh Token, Change Password, Update Profile, Get Profile
+
+##### 2.5.4 Product Service
+- **Port:** 8082
+- **Database:** PostgreSQL (product database)
+- **JWT Validation:** Validates JWT **locally** using shared secret — no DB query, no round-trip to User Service
+- **Authorization:** `@PreAuthorize("hasRole('ADMIN')")` at controller class level for all admin endpoints
+- **Features:**
+  - Full product CRUD with soft-delete
+  - Product variants, attributes, multi-image upload with thumbnail
+  - Category (hierarchical) and Brand management
+  - Product status management
+  - Filter, sort, paginated product listing
+  - Price history tracking (automatic on price change)
+  - AI-powered product features via **Gemini AI API** (model: `gemini-2.5-flash`)
+- **Inter-service call:** Calls User Service via **OpenFeign** — `FeignClientInterceptor` auto-forwards JWT in `Authorization` header
+- **Resilience:** Resilience4j Circuit Breaker on Feign calls
+  - COUNT_BASED sliding window (size: 10)
+  - Failure rate threshold: 50%
+  - Wait in OPEN state: 10s, auto-transition to HALF_OPEN
+- **Mapping:** MapStruct — compile-time generated, zero reflection overhead
+- **AOP:** Spring AOP for audit/cross-cutting concerns
+- **Schema Migration:** Flyway
+
+#### 2.6 Development Environment
+
+| Component | Version |
+|---|---|
+| Java | 21 |
+| Spring Boot | 4.0.0 |
+| Spring Cloud (Eureka, Gateway, Feign) | 5.x |
+| Resilience4j | 3.1.3 |
+| MapStruct | 1.6.3 |
+| JJWT | 0.12.5 (product-service) / 0.13.0 (user-service) |
+| PostgreSQL | 15+ |
+| Flyway | Latest (PostgreSQL module) |
+| Build Tool | Maven 3.9+ |
+
+---
+
+### 3. How to Run
 
 #### Prerequisites
-- Install Java 21 or higher
-- Install Maven 3.9 or higher
-- Install PostgreSQL 16 or higher (or use cloud database like Neon)
-- Install Docker (optional, for containerization)
+- Java 21+
+- Maven 3.9+
+- PostgreSQL 15+ (create two databases: `user_service_db` and `product_service_db`)
 
-#### Local Development
+#### Environment Variables
 
-**1. Clone the repository**
-```bash
-git clone <repository-url>
-cd product-service
+**user-service** — create `.env` in `user-service/` folder:
+```env
+JWT_SECRET=your_jwt_secret_key_minimum_32_chars
+JWT_EXPIRATION=1800000
+REFRESH_TOKEN_EXPIRATION=604800000
+FACEBOOK_CLIENT_ID=your_facebook_app_id
+FACEBOOK_CLIENT_SECRET=your_facebook_app_secret
+OAUTH2_REDIRECT_URI=http://localhost:5173/oauth2/callback
+COOKIE_HTTP_ONLY=true
+COOKIE_SECURE=false
 ```
 
-**2. Configure environment variables**
-```bash
-# Create .env file from template
-cp .env.example .env
-
-# Edit .env with your database configuration
-# Example:
-DB_URL=jdbc:postgresql://localhost:5432/product_service_db
-DB_USERNAME=postgres
-DB_PASSWORD=your_password
-
-# JWT configuration (token is issued by an authentication service)
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRATION=86400000
+**product-service** — create `.env` in `product-service/` folder:
+```env
+JWT_SECRET=your_jwt_secret_key_minimum_32_chars   # Must match user-service
+JWT_EXPIRATION=1800000
 ```
 
-**3. Create database**
-```bash
-# Using PostgreSQL CLI
-createdb product_service_db
+> `JWT_SECRET` must be **identical** in both services — product-service validates tokens issued by user-service.
 
-# Or using SQL
-psql -U postgres
-CREATE DATABASE product_service_db;
+#### Run Order (must follow this sequence)
+
+```bash
+# 1. Registry Service first — other services need it to register
+cd discovery-server && mvn spring-boot:run
+
+# 2. User Service
+cd user-service && mvn spring-boot:run
+
+# 3. Product Service
+cd product-service && mvn spring-boot:run
+
+# 4. API Gateway last — routes need services already registered in Eureka
+cd api-gateway && mvn spring-boot:run
 ```
 
-**4. Build the project**
+#### Service Ports
+
+| Service | Port | URL |
+|---|---|---|
+| Registry Service (Eureka Dashboard) | 8761 | http://localhost:8761 |
+| API Gateway | 8080 | http://localhost:8080 |
+| User Service | 8081 | http://localhost:8081 |
+| Product Service | 8082 | http://localhost:8082 |
+| PostgreSQL | 5432 | — |
+
+#### Key API Endpoints (via Gateway :8080)
+
+**Auth**
+```
+POST  /api/v1/auth/login          # Login with email/password
+POST  /api/v1/auth/register       # Register new account
+POST  /api/v1/auth/refresh        # Refresh access token
+POST  /api/v1/auth/logout         # Logout
+GET   /oauth2/authorization/facebook  # Facebook SSO
+```
+
+**Products (Public)**
+```
+GET   /api/v1/products            # List products (paginated, filterable)
+GET   /api/v1/products/{id}       # Get product detail
+GET   /api/v1/categories          # List categories
+GET   /api/v1/brands              # List brands
+```
+
+**Products (Admin — requires ADMIN role)**
+```
+POST   /api/v1/admin/products              # Create product
+PUT    /api/v1/admin/products/{id}         # Update product
+DELETE /api/v1/admin/products/{id}         # Soft delete product
+POST   /api/v1/products/{id}/images        # Upload image
+POST   /api/v1/products/{id}/variants/bulk # Bulk create variants
+```
+
+#### Build
 ```bash
 mvn clean install
 ```
 
-**5. Running unit tests**
+#### Run Unit Tests
 ```bash
 mvn test
 ```
 
-**6. Run the application**
-```bash
-# With Maven
-mvn spring-boot:run
-
-# Or with specific profile
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-
-# Or run the JAR file
-java -jar target/product-service-0.0.1-SNAPSHOT.jar
-```
-
-**7. Access the application**
-
-Once the application has started, you can access:
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- API Base URL: http://localhost:8080/api/v1
-- Health Check: http://localhost:8080/actuator/health
-- Database Migrations: Automatic via Flyway on startup
-
-#### Running with Docker
-
-**Build Docker image**
-```bash
-docker build -t product-service:latest .
-```
-
-**Run Docker container**
-```bash
-docker run -p 8080:8080 \
-  -e DB_URL=jdbc:postgresql://host.docker.internal:5432/product_service_db \
-  -e DB_USERNAME=postgres \
-  -e DB_PASSWORD=postgres \
-  -e SPRING_PROFILES_ACTIVE=dev \
-  product-service:latest
-```
-
-#### Using Docker Compose
-
-**Start all services**
-```bash
-# Start application and database
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
+---
 
 ### 4. References
-[Spring Boot Documentation](https://spring.io/projects/spring-boot)
-[Spring Data JPA](https://spring.io/projects/spring-data-jpa)
-[Flyway Database Migrations](https://flywaydb.org/)
-[MapStruct](https://mapstruct.org/)
-[SpringDoc OpenAPI](https://springdoc.org/)
-[PostgreSQL Documentation](https://www.postgresql.org/docs/)
-[Docker Documentation](https://docs.docker.com/)
-
+- [Microservice Architecture](https://microservices.io/)
+- [Spring Cloud Documentation](https://spring.io/projects/spring-cloud)
+- [Spring Security OAuth2](https://docs.spring.io/spring-security/reference/servlet/oauth2/index.html)
+- [Resilience4j Documentation](https://resilience4j.readme.io/)
+- [MapStruct Documentation](https://mapstruct.org/)
+- [Flyway Documentation](https://flywaydb.org/)
