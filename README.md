@@ -44,7 +44,7 @@ An e-commerce backend platform built as an MVP with a microservices architecture
 
 #### 2.1 High-level Design
 
-![High Level Design](data/images/architecture.png)
+![High Level Design](data/images/architecture1.png)
 
 **Service Communication:**
 
